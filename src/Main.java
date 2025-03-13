@@ -14,11 +14,11 @@ public class Main {
         var parser  = new Parser();
         while (true) {
             System.out.print("> ");
-            var input  = scanner.nextLine();
+            var input = scanner.nextLine();
             if (input == null || input.isEmpty()) continue;
             if (input.startsWith("exit")) break;
 
-            var root   = parser.parseExpression(input);
+            var root = parser.parseExpression(input);
             if (!root.typecheck(null, null)) {
                 System.out.println("Failed to typecheck expression!");
                 continue;
