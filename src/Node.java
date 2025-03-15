@@ -55,11 +55,7 @@ public abstract class Node {
         public static final EnumSet<Flags> ALL = EnumSet.allOf(Flags.class);
     }
 
-    public enum TypecheckingFlags {
-        EXPECT_LVALUE,
-    }
-
-    public abstract boolean typecheck(EnumSet<TypecheckingFlags> check_flags, Class hint_type);
+    public abstract boolean typecheck(Class hint_type);
     public abstract boolean serialize(StringBuilder sb);
     public abstract Object  evaluate();
 }

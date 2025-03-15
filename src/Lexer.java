@@ -150,9 +150,14 @@ public class Lexer {
                 c = advance(1);
             }
 
-            return new Token(Token.IDENTIFIER, line, column, sourceText.substring(start, end));
-        }
+            // handle if identifier is actually a reserved word
+            String identifier = sourceText.substring(start, end);
+            switch (identifier) {
+                case "var": return new Token(Token.DECL_VAR, line, column, identifier);
+            }
 
+            return new Token(Token.IDENTIFIER, line, column, identifier);
+        }
 
         // parse a number
         if (isDigit(nextChar(0))) {

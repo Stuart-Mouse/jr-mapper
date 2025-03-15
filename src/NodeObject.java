@@ -11,13 +11,9 @@ public class NodeObject extends NodeScope {
         super(parent, token);
     }
 
-    ArrayList<NodeField> fields;
+    ArrayList<NodeMapping> fields;
 
-    public boolean typecheck(EnumSet<TypecheckingFlags> check_flags, Class hint_type) {
-        if (check_flags != null && check_flags.contains(TypecheckingFlags.EXPECT_LVALUE)) {
-            System.out.println("Error: A string cannot be used as an lvalue.");
-            return false;
-        }
+    public boolean typecheck(Class hint_type) {
         valueType = String.class;
         flags.add(Flags.TYPECHECKED);
         return true;

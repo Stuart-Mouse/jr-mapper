@@ -19,7 +19,7 @@ public class Main {
             if (input.startsWith("exit")) break;
 
             var root = parser.parseExpression(input);
-            if (!root.typecheck(null, null)) {
+            if (!root.typecheck(null)) {
                 System.out.println("Failed to typecheck expression!");
                 continue;
             }

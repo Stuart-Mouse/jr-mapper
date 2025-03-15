@@ -1,21 +1,14 @@
-import java.util.EnumSet;
 
 public class NodeDeclaration extends Node {
-    public NodeDeclaration(NodeScope parent, Token token) {
+    public NodeDeclaration(NodeScope parent, Token token, String name) {
         super(parent, token);
 
-        name = token.text();
     }
 
     String name;
     Node   initExpression;
 
-    public boolean typecheck(EnumSet<TypecheckingFlags> check_flags, Class hint_type) {
-        if (check_flags != null && check_flags.contains(TypecheckingFlags.EXPECT_LVALUE)) {
-            // log error message
-            return false;
-        }
-        
+    public boolean typecheck(Class hint_type) {
         // TODO: check for duplicate declaration in scope
         
 //        if (!initExpression.typecheck(, null))  return false;

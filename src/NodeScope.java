@@ -20,7 +20,7 @@ public class NodeScope extends Node {
     }
 
     // dummy implementations for these methods until I figure out something better to do
-    public boolean typecheck(EnumSet<TypecheckingFlags> check_flags, Class hint_type) {
+    public boolean typecheck(Class hint_type) {
         flags.add(Flags.TYPECHECKED);
         return true;
     }

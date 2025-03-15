@@ -67,13 +67,16 @@ Currently, only the basic numeric types and String are supported, but eventually
 Do we allow general declarations (like variables) to be declared within the scope of a NodeMapping?
     probably yes, but this will require some thought.
 
-Do we actually need any typechecking flags? 
-    If we can get away with not using them, it would simplify some things.
-    And we may not need it since all our lvalues are resolved as mapping nodes or as variables, which will probably need an explicit type.
-    I can't think of a case rn where we would need any kind of complex expression as an lvalue...
-
 If we use NodeObject and NodeArray in the context of a choice expression, there's no direct output value we can map to that node...
     do we just propagate the eventual NodeField's output mapping up to the object/array nodes in the choice?
     or do we just resolve them simply to objects in evaluate and pass them back up
         probably this, we can just know to pass up the value if there's not internal/output binding set 
+
+## TODO
+
+implement parseDeclaration so that we can declare variables
+finish implementing identifier resolution
+implement some means to poke identifiers into the Mapping context
+implement member access with dot operator
+implement method access and evaluation
 

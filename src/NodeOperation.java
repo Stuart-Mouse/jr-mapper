@@ -12,19 +12,14 @@ public class NodeOperation extends Node {
     Node      left;
     Node      right;
 
-    public boolean typecheck(EnumSet<TypecheckingFlags> check_flags, Class hint_type) {
-        if (check_flags != null && check_flags.contains(TypecheckingFlags.EXPECT_LVALUE)) {
-            System.out.println("Error: The result of an operation cannot be used as an lvalue.");
-            return false;
-        }
-
+    public boolean typecheck(Class hint_type) {
         if ( left.valueType != null && Number.class.isAssignableFrom( left.valueType)
          && right.valueType != null && Number.class.isAssignableFrom(right.valueType)) {
             // TODO: pre-emptively get wider of two Number types and set as hint_type in below calls to typecheck()
         }
 
-        if (! left.typecheck(null, null)) return false;
-        if (!right.typecheck(null, null)) return false;
+        if (! left.typecheck(null)) return false;
+        if (!right.typecheck(null)) return false;
 
         if (left.valueType != right.valueType) {
             // TODO: if left and right types don't match, we can try to coerce to the wider of the two types.

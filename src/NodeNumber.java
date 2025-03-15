@@ -22,12 +22,7 @@ public class NodeNumber extends Node {
     // TODO: we could use better checking here to detect narrowing conversions and emit warnings
     //       it may actually be wiser to just move the dynamic number casts out to their own utility function,
     //       similar to how I do it in the data packer's remap_data functions.
-    public boolean typecheck(EnumSet<TypecheckingFlags> check_flags, Class hint_type) {
-        if (check_flags != null && check_flags.contains(TypecheckingFlags.EXPECT_LVALUE)) {
-            System.out.println("Error: A number cannot be used as an lvalue.");
-            return false;
-        }
-
+    public boolean typecheck(Class hint_type) {
         // we seemingly cannot use a switch here on the type, not sure why Java doesn't like that...
         if (hint_type == Double.class) {
             value     = value.doubleValue();

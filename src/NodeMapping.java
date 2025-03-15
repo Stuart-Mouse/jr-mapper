@@ -1,14 +1,16 @@
 /*
     NodeMapping is our basic DOM-style node for representing data fields in the mapper file.
-    It is extended by NodeField, NodeObject, and NodeArray.
-    Every NodeMapping also serves as a scope, although this scope does not really mean much in the case of the NodeField.
+    It is much like a JSON Node in that it's just a simple key/value pair.
+    The value can be a general single-valued expression, or some aggregate type like a NodeObject or NodeArray.
 */
 
-public abstract class NodeMapping extends NodeScope {
-    public NodeMapping(NodeScope parent, Token token) {
+public class NodeMapping extends NodeScope {
+    public NodeMapping(NodeScope parent, Token token, String name) {
         super(parent, token);
+        this.name = name;
     }
 
     public String name;
+    public Node   valueNode;
     public Object value;
 }

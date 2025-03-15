@@ -52,4 +52,7 @@ public record Token(int type, int line, int column, String text) {
     public static final int LOGICAL_AND               = 256 + 106;  // &&
     public static final int LOGICAL_OR                = 256 + 107;  // ||
     public static final int SPREAD                    = 256 + 108;  // ..
+
+    // keywords
+    public static final int DECL_VAR = 256 + 201;
 }

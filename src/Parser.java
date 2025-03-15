@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public class Parser {
     public Parser() { }
 
-    public Lexer  lexer = new Lexer();
+    public Lexer      lexer = new Lexer();
     public Node       root;             // TODO: we should set this on init as a block of some sort, and also set it as currentScope
     public NodeScope  globalScope;
     public NodeScope  currentScope;     // TODO: maybe this should be passed as param instead?
@@ -131,6 +131,63 @@ public class Parser {
         }
 
         System.out.println("parseLeaf returning null");
+        return null;
+    }
+
+    public Node parseDeclaration(String expr) {
+        lexer.init(expr);
+        return parseDeclaration();
+    }
+
+    private Node parseDeclaration() {
+        // declaration must begin with some type identifier  or 'var'
+        // OR, the declaration is a NodeMapping, in which case the first token should be an identifier that resolves to something in the current output object(s) scope
+        // so I guess we just do parseExpression here and the first thing better be some keyword or identifier
+        Token token = lexer.getToken();
+        switch (token.type()) {
+            case Token.DECL_VAR:
+                var var_token = token; // saved so that we have this location to initialize NodeMapping with
+
+                token = lexer.getToken();
+                if (token.type() != Token.IDENTIFIER) {
+                    System.out.println("Error: expected identifier after keyword 'var' in variable declaration at " + token.location() + ".");
+                    return null;
+                }
+                Token identifier = token;
+
+                token = lexer.getToken();
+                if (token.type() != Token.COLON) {
+                    System.out.println("Error: expected colon after identifier in variable declaration at " + token.location() + ".");
+                    return null;
+                }
+
+                var declaration = new NodeDeclaration(currentScope, token, identifier.text());
+
+                declaration.initExpression = parseExpression(0);
+                if (declaration.initExpression == null) {
+                    System.out.println("Error: failed while trying to parse init expression in variable declaration at " + token.location() + ".");
+                    return null;
+                }
+
+                return declaration;
+
+            case Token.IDENTIFIER:
+                identifier = token;
+
+                token = lexer.getToken();
+                if (token.type() != Token.COLON) {
+                    System.out.println("Error: expected colon after identifier in Mapping declaration at " + token.location() + ".");
+                    return null;
+                }
+
+                NodeMapping mapping = new NodeMapping(currentScope, token, identifier.text());
+                // then assert next token is a colon
+                //      note that later we may allow more complex syntax here, for example, for range-based initialization on array types
+                // then like above we call parseexpression,
+
+        }
+
+
         return null;
     }
 }
