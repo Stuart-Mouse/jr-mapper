@@ -1,3 +1,6 @@
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -8,6 +11,30 @@ import java.lang.StringBuilder;
 
 public class Main {
     public static void main(String[] args) {
+
+        // TODO: test objects and arrays
+        //       cannot yet typecheck, so just parse and serialize
+        try {
+            Path filePath = Paths.get("test.rmap");
+            String input = Files.readString(filePath);
+
+            var parser = new Parser();
+            var root = parser.parseDeclaration(input);
+            if (root == null) {
+                throw new RuntimeException("Failed to parse declaration!");
+            }
+//            if (!root.typecheck(null)) {
+//                throw new RuntimeException("Failed to typecheck declaration!");
+//            }
+            var sb = new StringBuilder();
+            root.serialize(sb);
+            System.out.println(sb.toString());
+        } catch(Exception e) {
+            System.out.println(e.toString());
+        }
+
+        // REPL Test
+
         System.out.println("Input numeric expression to evaluate or type \"exit\" to quit.");
 
         var scanner = new Scanner(System.in);

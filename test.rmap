@@ -1,0 +1,7 @@
+
+
+var object: {
+    number: 5,
+    string: "some string"
+}
+

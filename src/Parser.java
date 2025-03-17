@@ -20,10 +20,12 @@ public class Parser {
         return parseExpression(0);
     }
 
-    // Parse in recursive-descent, using an algorithm that alternates between iteration and recursion to naturally handle operator precedence (thanks Jon).
-    // Parsing expressions iteratively naturally produces left-leaning trees, while parsing recursively produces left-leaning trees.
-    // By taking advantage of this fact, we can implement binary expressions with operator precedence trivially,
-    // since all we need to do is parse recursively while precedence is increasing and iteratively while it is decreasing or staying the same.
+    /*
+        We parse in recursive-descent, using an algorithm that alternates between iteration and recursion to naturally handle operator precedence (thanks Jon).
+        Parsing expressions iteratively naturally produces left-leaning trees, while parsing recursively produces left-leaning trees.
+        By taking advantage of this fact, we can implement binary expressions with operator precedence trivially,
+        since all we need to do is parse recursively while precedence is increasing and iteratively while it is decreasing or staying the same.
+    */
     private Node parseExpression(int min_prec) {
         System.out.println("enter parseExpression");
         Node left = parseLeaf();
@@ -132,7 +134,7 @@ public class Parser {
 //            }
             case Token.OPEN_BRACE: {
                 var node = new NodeObject(currentScope, token);
-                if (lexer.expectToken(Token.CLOSE_BRACE) != null) {
+                if (lexer.expectToken(Token.CLOSE_BRACE) == null) {
                     // TODO: if we allow variable declarations in objects, we should probably inline parseDeclarations here so that we can put variable decls and mapping fields into separate arrays.
                     node.fields = parseDeclarations(Token.CLOSE_BRACE);
                     if (node.fields == null) {
@@ -176,7 +178,7 @@ public class Parser {
         Token token = lexer.getToken();
         switch (token.type()) {
             case Token.DECL_VAR:
-                var var_token = token; // saved so that we have this location to initialize NodeMapping with
+                var var_token = token;
 
                 token = lexer.getToken();
                 if (token.type() != Token.IDENTIFIER) {
@@ -191,7 +193,7 @@ public class Parser {
                     return null;
                 }
 
-                var declaration = new NodeDeclaration(currentScope, token, identifier.text());
+                var declaration = new NodeDeclaration(currentScope, var_token, identifier.text());
 
                 var other = currentScope.addDeclaration(declaration);
                 if (other != null) {
@@ -204,33 +206,29 @@ public class Parser {
                     System.out.println("Error: failed while trying to parse value expression in variable declaration at " + token.location() + ".");
                     return null;
                 }
+                lexer.expectToken(Token.COMMA); // consume comma if present
 
                 return declaration;
 
             case Token.IDENTIFIER:
                 identifier = token;
 
-                token = lexer.getToken();
-                if (token.type() != Token.COLON) {
-                    System.out.println("Error: expected colon after identifier in Mapping declaration at " + token.location() + ".");
-                    return null;
-                }
-
-                NodeMapping mapping = new NodeMapping(currentScope, token, identifier.text());
-
                 // NOTE: later we may allow more complex syntax here before then colon
                 //       for example, range-based initialization on array types
                 token = lexer.getToken();
                 if (token.type() != Token.COLON) {
-                    System.out.println("Error: expected colon after identifier in variable declaration at " + token.location() + ".");
+                    System.out.println("Error: expected colon after identifier in mapping declaration at " + token.location() + ".");
                     return null;
                 }
+
+                NodeMapping mapping = new NodeMapping(currentScope, token, identifier.text());
 
                 mapping.valueNode = parseExpression(0);
                 if (mapping.valueNode == null) {
                     System.out.println("Error: failed while trying to parse value expression of mapping at " + token.location() + ".");
                     return null;
                 }
+                lexer.expectToken(Token.COMMA); // consume comma if present
 
                 return mapping;
         }

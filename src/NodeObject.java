@@ -14,16 +14,22 @@ public class NodeObject extends NodeScope {
     ArrayList<Node> fields;
 
     public boolean typecheck(Class hint_type) {
-        valueType = String.class;
+        // A type hint is required for objects at this time.
+        // This type hint should be provided by the output object to which the NodeObject is bound.
+        // In the future, we may also support an explicit type identifier using the `Type.{}` syntax or similar.
+        if (hint_type == null) return false;
+        valueType = hint_type;
         flags.add(Flags.TYPECHECKED);
         return true;
     }
 
     public boolean serialize(StringBuilder sb) {
         sb.append("{\n");
-        for (var field : fields) {
-            field.serialize(sb);
-            sb.append(",\n");
+        if (fields != null) {
+            for (var field : fields) {
+                field.serialize(sb);
+                sb.append(",\n");
+            }
         }
         sb.append("}");
         return true;
