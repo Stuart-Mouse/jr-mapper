@@ -8,6 +8,7 @@ import java.util.ArrayList;
 public class NodeObject extends NodeScope {
     public NodeObject(NodeScope parent, Token token) {
         super(parent, token);
+        this.kind = Kind.OBJECT;
     }
 
     // TODO: we will need to change this back to an array of NodeMapping I think, unless we decide to allow variable declarations inside of objects.

@@ -3,6 +3,7 @@ import java.util.EnumSet;
 public class NodeIdentifier extends Node {
     public NodeIdentifier(NodeScope parent, Token token) {
         super(parent, token);
+        this.kind = Kind.IDENTIFIER;
         name = token.text();
     }
 

@@ -1,3 +1,4 @@
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 public class NodeMethodCall extends Node {
@@ -5,15 +6,17 @@ public class NodeMethodCall extends Node {
         super(parent, token);
     }
 
-    public Node methodExpression;
+    public NodeIdentifier  methodIdentifier;
+    public Method          resolvedMethod;
     public ArrayList<Node> parameters;
 
+    // NOTE: type_hint here is the base object type, not the result type.
     public boolean typecheck(Class type_hint) {
         return true;
     }
 
     public boolean serialize(StringBuilder sb) {
-        methodExpression.serialize(sb);
+        methodIdentifier.serialize(sb);
         sb.append("(");
         boolean first = true;
         for (var param: parameters) {

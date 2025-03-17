@@ -3,6 +3,7 @@ import java.util.EnumSet;
 public class NodeOperation extends Node {
     public NodeOperation(NodeScope parent, Token token, Operator operator, Node left, Node right) {
         super(parent, token);
+        this.kind     = Kind.OPERATION;
         this.operator = operator;
         this.left     = left;
         this.right    = right;

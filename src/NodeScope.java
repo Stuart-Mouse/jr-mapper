@@ -7,7 +7,10 @@
 import java.util.HashMap;
 
 public class NodeScope extends Node {
-    public NodeScope(NodeScope parent, Token token) { super(parent, token); }
+    public NodeScope(NodeScope parent, Token token) {
+        super(parent, token);
+        this.kind = Kind.SCOPE;
+    }
 
     private HashMap<String, NodeDeclaration> declarations = new HashMap<String, NodeDeclaration>();
 

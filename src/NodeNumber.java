@@ -3,6 +3,7 @@ import java.util.EnumSet;
 public class NodeNumber extends Node {
     public NodeNumber(NodeScope parent, Token token) {
         super(parent, token);
+        this.kind = Kind.NUMBER;
         // NOTE: for now, we only store as Double or Long, based on whether the source text contained a '.'
         //       we also tentatively set the valueType, though this may be altered during typechecking to coerce to a different number type.
         // TODO: emit a warning if the number textually represented cannot be actually stored in either a Double or Long without loss of data.

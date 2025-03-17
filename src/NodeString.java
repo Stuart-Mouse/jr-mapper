@@ -3,6 +3,7 @@ import java.util.EnumSet;
 public class NodeString extends Node {
     public NodeString(NodeScope parent, Token token) {
         super(parent, token);
+        this.kind = Kind.STRING;
         value = token.text();
     }
 
