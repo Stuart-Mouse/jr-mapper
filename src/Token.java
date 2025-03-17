@@ -47,8 +47,6 @@ public record Token(int type, int line, int column, String text) {
     public static final int DOUBLE_EQUAL              = 256 + 101;  // ==
     public static final int LESS_THAN_OR_EQUAL_TO     = 256 + 102;  // <=
     public static final int GREATER_THAN_OR_EQUAL_TO  = 256 + 103;  // >=
-    public static final int PLUS_EQUALS               = 256 + 104;  // +=
-    public static final int MINUS_EQUALS              = 256 + 105;  // -=
     public static final int LOGICAL_AND               = 256 + 106;  // &&
     public static final int LOGICAL_OR                = 256 + 107;  // ||
     public static final int SPREAD                    = 256 + 108;  // ..

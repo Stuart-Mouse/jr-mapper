@@ -9,11 +9,10 @@
 import java.util.ArrayList;
 
 public class Parser {
-    public Parser() { }
+    public Parser() { currentScope = root; }
 
-    public Lexer      lexer = new Lexer();
-    public Node       root;             // TODO: we should set this on init as a block of some sort, and also set it as currentScope
-    public NodeScope  globalScope;
+    public Lexer      lexer             = new Lexer();
+    public NodeScope  root              = new NodeScope(null, null);
     public NodeScope  currentScope;     // TODO: maybe this should be passed as param instead?
 
     public Node parseExpression(String expr) {
@@ -47,16 +46,18 @@ public class Parser {
         return left;
     }
 
+    // returns null on failure, empty list if no expressions parsed
     private ArrayList<Node> parseCommaSeparatedExpressions() {
         ArrayList<Node> exprs = new ArrayList<Node>();
-
-        Node node;
         while (true) {
-            node = parseExpression(0);
-            if (node == null) break;
+            var node = parseExpression(0);
+            if (node == null) return null;
             exprs.add(node);
-        }
 
+            var comma = lexer.peekToken();
+            if (comma.type() != Token.COMMA) break;
+            lexer.getToken(); // consume peeked comma
+        }
         return exprs;
     }
 
@@ -105,29 +106,58 @@ public class Parser {
         }
 
         switch (token.type()) {
-            case Token.IDENTIFIER:
+            case Token.IDENTIFIER: {
                 return new NodeIdentifier(currentScope, token);
-
-            case Token.NUMBER:
+            }
+            case Token.NUMBER: {
                 return new NodeNumber(currentScope, token);
-
-            case Token.OPEN_PAREN:
+            }
+            case Token.OPEN_PAREN: {
                 var node = parseExpression(0); // reset min_prec since we are in parens
                 if (node == null) return null;
                 node.flags.add(Node.Flags.PARENTHESIZED);
 
                 var close_paren = lexer.getToken();
-                if (close_paren == null || close_paren.type() != Token.CLOSE_PAREN) {
-                    // log Expected closing paren 
+                if (close_paren.type() != Token.CLOSE_PAREN) {
+                    System.out.println("Error: expected closing paren at " + close_paren.location() + " to match open paren at " + token.location());
                     return null;
                 }
                 return node;
-
-            case Token.STRING:
+            }
+            case Token.STRING: {
                 return new NodeString(currentScope, token);
-
-            // case Token.DOT:
-            //   return new NodeDot();
+            }
+//            case Token.DOT: {
+//                return new NodeDot();
+//            }
+            case Token.OPEN_BRACE: {
+                var node = new NodeObject(currentScope, token);
+                if (lexer.expectToken(Token.CLOSE_BRACE) != null) {
+                    // TODO: if we allow variable declarations in objects, we should probably inline parseDeclarations here so that we can put variable decls and mapping fields into separate arrays.
+                    node.fields = parseDeclarations(Token.CLOSE_BRACE);
+                    if (node.fields == null) {
+                        System.out.println("Error while trying to parse inner declarations of NodeObject.");
+                        return null;
+                    }
+                }
+                return node;
+            }
+            case Token.OPEN_BRACKET: {
+                var node = new NodeArray(currentScope, token);
+                if (lexer.expectToken(Token.CLOSE_BRACKET) != null) {
+                    node.valueNodes = parseCommaSeparatedExpressions();
+                    if (node.valueNodes == null) {
+                        System.out.println("Error while trying to parse inner declarations of NodeObject.");
+                        return null;
+                    }
+                    var close_bracket = lexer.getToken();
+                    if (close_bracket.type() != Token.CLOSE_BRACKET) {
+                        System.out.println("Error: expected closing bracket at " + close_bracket.location() + " to end array at " + node.location());
+                        return null;
+                    }
+                }
+                return node;
+            }
         }
 
         System.out.println("parseLeaf returning null");
@@ -163,9 +193,15 @@ public class Parser {
 
                 var declaration = new NodeDeclaration(currentScope, token, identifier.text());
 
-                declaration.initExpression = parseExpression(0);
-                if (declaration.initExpression == null) {
-                    System.out.println("Error: failed while trying to parse init expression in variable declaration at " + token.location() + ".");
+                var other = currentScope.addDeclaration(declaration);
+                if (other != null) {
+                    System.out.println(identifier.location() + ": Error: redeclaration of '" + identifier.text() + "'. Previously declared at " + other.location() + ".");
+                    return null;
+                }
+
+                declaration.valueNode = parseExpression(0);
+                if (declaration.valueNode == null) {
+                    System.out.println("Error: failed while trying to parse value expression in variable declaration at " + token.location() + ".");
                     return null;
                 }
 
@@ -181,13 +217,38 @@ public class Parser {
                 }
 
                 NodeMapping mapping = new NodeMapping(currentScope, token, identifier.text());
-                // then assert next token is a colon
-                //      note that later we may allow more complex syntax here, for example, for range-based initialization on array types
-                // then like above we call parseexpression,
 
+                // NOTE: later we may allow more complex syntax here before then colon
+                //       for example, range-based initialization on array types
+                token = lexer.getToken();
+                if (token.type() != Token.COLON) {
+                    System.out.println("Error: expected colon after identifier in variable declaration at " + token.location() + ".");
+                    return null;
+                }
+
+                mapping.valueNode = parseExpression(0);
+                if (mapping.valueNode == null) {
+                    System.out.println("Error: failed while trying to parse value expression of mapping at " + token.location() + ".");
+                    return null;
+                }
+
+                return mapping;
         }
 
-
+        System.out.println(token.location() + ": Error: Unexpected token '" + token.text() + "'.");
         return null;
     }
+
+    private ArrayList<Node> parseDeclarations(int break_token_type) {
+        var declarations = new ArrayList<Node>();
+        while (true) {
+            if (lexer.expectToken(break_token_type) != null) break;
+            if (lexer.expectToken(Token.EOF) != null) break;
+            var decl = parseDeclaration();
+            if (decl == null) return null;
+            declarations.add(decl);
+        }
+        return declarations;
+    }
+
 }

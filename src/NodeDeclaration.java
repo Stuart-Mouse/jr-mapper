@@ -1,34 +1,30 @@
 
 public class NodeDeclaration extends Node {
-    public NodeDeclaration(NodeScope parent, Token token, String name) {
-        super(parent, token);
-
+    public NodeDeclaration(NodeScope parentScope, Token token, String name) {
+        super(parentScope, token);
+        this.name = name;
     }
 
     String name;
-    Node   initExpression;
+    Node   valueNode;
+    Object value;
 
     public boolean typecheck(Class hint_type) {
-        // TODO: check for duplicate declaration in scope
-        
-//        if (!initExpression.typecheck(, null))  return false;
-//        if initExpression.valueType
-
-        
-        
-        
+        if (!valueNode.typecheck(hint_type))  return false;
+        valueType = valueNode.valueType;
+        flags.add(Flags.TYPECHECKED);
         return true;
     }
 
     public boolean serialize(StringBuilder sb) {
-        if (flags.contains(Flags.PARENTHESIZED)) sb.append("(");
-        sb.append(name);
-        if (flags.contains(Flags.PARENTHESIZED)) sb.append(")");
+        sb.append("var ").append(name).append(": ");
+        valueNode.serialize(sb);
         return true;
     }
 
     public Object evaluate() {
-        // TODO: we actually need to implement identifier resolution and return object referenced by identifier
-        return name;
+        // NOTE: we only need to evaluate this once, then we can just return the same value
+        if (value == null)  value = valueNode.evaluate();
+        return value;
     }
 }

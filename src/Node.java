@@ -32,8 +32,10 @@ import java.util.EnumSet;
 public abstract class Node {
     public Node(NodeScope parentScope, Token token) {
         this.parentScope = parentScope;
-        this.line        = token.line();
-        this.column      = token.column();
+        if (token != null) {
+            this.line = token.line();
+            this.column = token.column();
+        }
     }
 
     public NodeScope        parentScope;

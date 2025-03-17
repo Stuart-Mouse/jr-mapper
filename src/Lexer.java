@@ -26,6 +26,12 @@ public class Lexer {
     private int     sourceTextCursor;
     private Token   nextToken;
 
+    public Token expectToken(int token_type) {
+        if (peekToken().type() == token_type) {
+            return getToken();
+        }
+        return null;
+    }
 
     public Token getToken() {
         if (nextToken == null) return new Token(Token.ERROR, 0, 0, "nextToken was null!");
@@ -125,13 +131,20 @@ public class Lexer {
         int line   = sourceLine;
         int column = sourceColumn;
 
-        if (isEOF()) {
-            return new Token(Token.EOF, line, column, "");
-        }
+        if (isEOF()) return new Token(Token.EOF, line, column, "");
 
-        char c = nextChar(0);
+        char c  = nextChar(0);
 
         // 2-char tokens
+        {
+            char c0 = c;
+            char c1 = nextChar(1);
+            if (c0 == '<' && c1 == '=') return new Token(Token.LESS_THAN_OR_EQUAL_TO,    line, column, sourceText.substring(sourceTextCursor, sourceTextCursor+2));
+            if (c0 == '>' && c1 == '=') return new Token(Token.GREATER_THAN_OR_EQUAL_TO, line, column, sourceText.substring(sourceTextCursor, sourceTextCursor+2));
+            if (c0 == '=' && c1 == '=') return new Token(Token.DOUBLE_EQUAL,             line, column, sourceText.substring(sourceTextCursor, sourceTextCursor+2));
+            if (c0 == '&' && c1 == '&') return new Token(Token.LOGICAL_AND,              line, column, sourceText.substring(sourceTextCursor, sourceTextCursor+2));
+            if (c0 == '|' && c1 == '|') return new Token(Token.LOGICAL_OR,               line, column, sourceText.substring(sourceTextCursor, sourceTextCursor+2));
+        }
 
         // single-char tokens
         if (singleCharTokens.indexOf(c) != -1) {

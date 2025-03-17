@@ -7,11 +7,16 @@ public class NodeIdentifier extends Node {
     }
 
     String name;
-    // NodeDeclaration  resolvedDeclaration;
-    // we won't have the same complication that LS has where we don't have internal declarations for external variables and procedures. instead everything will need to have some internal declaration that it resolves to, I think.
-    // then again not really because of member accessors and such...
+    NodeDeclaration  resolvedDeclaration;
 
     public boolean typecheck(Class hint_type) {
+        resolvedDeclaration = parentScope.resolveDeclaration(name);
+        if (resolvedDeclaration == null) {
+            System.out.println(location() + ": Error: failed to resolve declaration for identifier '" + name + "'.");
+            return false;
+        }
+        valueType = resolvedDeclaration.valueType;
+        flags.add(Flags.TYPECHECKED);
         return true;
     }
 
@@ -23,8 +28,7 @@ public class NodeIdentifier extends Node {
     }
 
     public Object evaluate() {
-        // TODO: we actually need to implement identifier resolution and return object referenced by identifier
-        return name;
+        return resolvedDeclaration.evaluate();
     }
 }
     

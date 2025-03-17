@@ -4,14 +4,14 @@
 */
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 
 public class NodeObject extends NodeScope {
     public NodeObject(NodeScope parent, Token token) {
         super(parent, token);
     }
 
-    ArrayList<NodeMapping> fields;
+    // TODO: we will need to change this back to an array of NodeMapping I think, unless we decide to allow variable declarations inside of objects.
+    ArrayList<Node> fields;
 
     public boolean typecheck(Class hint_type) {
         valueType = String.class;
@@ -34,6 +34,8 @@ public class NodeObject extends NodeScope {
         Object value = null;
         try {
             value = valueType.getDeclaredConstructor().newInstance();
+            // TODO: iterate over all fields, executing them and assigning their results to the correct members of 'value'
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

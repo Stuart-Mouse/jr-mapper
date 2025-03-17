@@ -18,8 +18,14 @@ public class NodeOperation extends Node {
             // TODO: pre-emptively get wider of two Number types and set as hint_type in below calls to typecheck()
         }
 
-        if (! left.typecheck(null)) return false;
-        if (!right.typecheck(null)) return false;
+        if (! left.typecheck(null)) {
+            System.out.println(left.location() + ": Error: failed to typecheck left side of binary operation.");
+            return false;
+        }
+        if (!right.typecheck(null)) {
+            System.out.println(right.location() + ": Error: failed to typecheck right side of binary operation.");
+            return false;
+        }
 
         if (left.valueType != right.valueType) {
             // TODO: if left and right types don't match, we can try to coerce to the wider of the two types.

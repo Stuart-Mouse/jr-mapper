@@ -18,10 +18,28 @@ public class Main {
             if (input == null || input.isEmpty()) continue;
             if (input.startsWith("exit")) break;
 
-            var root = parser.parseExpression(input);
-            if (!root.typecheck(null)) {
-                System.out.println("Failed to typecheck expression!");
-                continue;
+            // NOTE: as a hack, we are checking the first character of input, and if it is a '!' then we will treat the input as an expression, else it is a declaration
+            Node root;
+            if (input.charAt(0) == '!') {
+                root = parser.parseExpression(input.substring(1));
+                if (root == null) {
+                    System.out.println("Failed to parse expression!");
+                    continue;
+                }
+                if (!root.typecheck(null)) {
+                    System.out.println("Failed to typecheck expression!");
+                    continue;
+                }
+            } else {
+                root = parser.parseDeclaration(input);
+                if (root == null) {
+                    System.out.println("Failed to parse declaration!");
+                    continue;
+                }
+                if (!root.typecheck(null)) {
+                    System.out.println("Failed to typecheck declaration!");
+                    continue;
+                }
             }
 
             var result = root.evaluate();
