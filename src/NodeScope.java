@@ -4,24 +4,29 @@
     Not sure if that's really the right choice long term but we just gotta do something for now.
 */
 
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public class NodeScope extends Node {
     public NodeScope(NodeScope parent, Token token) {
         super(parent, token);
     }
 
-    private HashMap<String, NodeDeclaration> declarations = new HashMap<String, NodeDeclaration>();
+    public ArrayList<NodeDeclaration> declarations = new ArrayList<NodeDeclaration>();
 
-    // returns false if a declaration with the same name was already present in map
+    // returns existing declaration if identifier is already declared in this scope
     public NodeDeclaration addDeclaration(NodeDeclaration decl) {
-        return declarations.putIfAbsent(decl.name, decl);
-    }
-    public HashMap<String, NodeDeclaration> getDeclarations() {
-        return declarations;
+        var other = resolveDeclaration(decl.name);
+        if (other != null) return other;
+        declarations.add(decl);
+        return null;
     }
     public NodeDeclaration resolveDeclaration(String identifier) {
-        return declarations.get(identifier);
+        for (var decl: declarations) {
+            if (decl.name.equals(identifier)) {
+                return decl;
+            }
+        }
+        return null;
     }
 
     // dummy implementations for these methods until I figure out something better to do

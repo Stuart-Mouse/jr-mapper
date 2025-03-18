@@ -19,6 +19,7 @@ public class NodeDeclaration extends Node {
     }
 
     // NodeDeclaration overrides getValueType to allow forward-referencing identifiers.
+    // TODO: we will need to implement some checking for circular references here.
     @Override
     public Class getValueType() {
         if (!flags.contains(Flags.TYPECHECKED)) {

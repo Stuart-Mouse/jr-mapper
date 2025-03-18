@@ -97,17 +97,8 @@ implement some means to poke identifiers into the Mapping context
 implement member access with dot operator
 implement method access and evaluation
 
-probably make NodeMapping extend NodeDeclaration
-    would make it easier to resolve other mapping nodes, since we can resolve them in the same way as any other identifier
-    also would put variables and mappings into the same namespace so-to-speak, so we can ensure that variable names do not match field names in a mapping object
-    could do the same for some NodeVariable type, but really we can just use some enum to denote difference between variable and input declarations
-
 need to create some helper function to get fields on a class bc getDeclaredFields does not return inherited fields and getFields only returns public fields.
     so we will need to make out own version which actually gets all fields on an object.
-
-probably implement a getValueType method on Node so that we can provide better error reporting
-    for example, when trying to get the valueType of an identifier, we can tell the user if they are trying to use the identifier before its declaration.
-
 
 may be able to implement separate declaration / definition of output object by using a real identifier node on NodeMapping instead of just storing name as string
 then we can resolve the bare identifier to the output node to get type 
@@ -116,8 +107,6 @@ maybe then constructor can be done on initial declaration and setting of additio
 will need to be able to resolve identifiers of types/constructors
 maybe we should require that output object of transform calls a constructor for the object
 
-need to actually use type hint provided to Number node
-
 if we make the language entirely declarative, another benefit is that we will be able to optimize certain expressions by pre-evaluating the results
 or by simply inlining referenced nodes in place of their identifiers
     for example, with numbers, we can coerce them at the usage site to whatever specific number type is desired
@@ -125,5 +114,12 @@ or by simply inlining referenced nodes in place of their identifiers
     it will probably be easier to debug through the emitted code if we just leave the identifiers in place.
     in any case, we can make this sort of feature optional/configurable
         maybe we want to enable some inlining or pre-evaluation (e.g. string concatenation) but not enable number inlining
+
+
+provide warnings and error messages for
+    variable shadowing
+    circular references
+    use of variable in its own declaration
+
 
 

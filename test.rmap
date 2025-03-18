@@ -1,11 +1,10 @@
 meta: {
     name: "Mapper Test (" + filename + ")",
-    id: 3535
-    var filename: "test.rmap",
+    id: 3535,
 }
 
-var object: {
-    number: 5,
-    string: "some string"
-}
+var filename: "test.rmap",
+var string:   "some string"
+var number:   5,
+
 

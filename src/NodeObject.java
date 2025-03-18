@@ -11,9 +11,6 @@ public class NodeObject extends NodeScope {
         super(parent, token);
     }
 
-    // TODO: we will need to change this back to an array of NodeMapping I think, unless we decide to allow variable declarations inside of objects.
-    ArrayList<Node> fields;
-
     public boolean typecheck(Class hint_type) {
         // A type hint is required for objects at this time.
         // This type hint should be provided by the output object to which the NodeObject is bound.
@@ -21,7 +18,7 @@ public class NodeObject extends NodeScope {
         if (hint_type == null) return false;
         valueType = hint_type;
 
-        for (var field_node: fields) {
+        for (var field_node: declarations) {
             Class field_hint_type = null;
             if (field_node instanceof NodeMapping mapping) {
                 try {
@@ -39,9 +36,9 @@ public class NodeObject extends NodeScope {
 
     public boolean serialize(StringBuilder sb) {
         sb.append("{\n");
-        if (fields != null) {
-            for (var field : fields) {
-                field.serialize(sb);
+        if (declarations != null) {
+            for (var decl: declarations) {
+                decl.serialize(sb);
                 sb.append(",\n");
             }
         }
@@ -62,13 +59,14 @@ public class NodeObject extends NodeScope {
                 //       if not, we will probably want to add to the typechecking step some logic that ensures all constructor fields are declared
                 //       perhaps we can even have some special syntax for constructor parameters as opposed to normal fields
             } catch (Exception e) {
+                System.out.println(location() + ": Exception while attempting to construct object of type " + valueType);
                 throw new RuntimeException(e);
             }
         }
 
-        for (var field_node: fields) {
-            field_node.evaluate(null);
-            if (field_node instanceof NodeMapping mapping) {
+        for (var decl: declarations) {
+            decl.evaluate(null);
+            if (decl instanceof NodeMapping mapping) {
                 try {
                     Field field = valueType.getDeclaredField(mapping.name);
                     assert(field.getType().equals(mapping.valueType));
