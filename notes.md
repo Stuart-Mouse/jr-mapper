@@ -60,6 +60,22 @@ All expressions must be typechecked before they can be evaluated.
 Currently, only the basic numeric types and String are supported, but eventually objects and arrays will be supported as well.
 
 
+### Declarations
+
+Three types:
+- Var
+- Input
+- Output
+
+Var declares a new variable and assigns a value in the same statement.
+Variables can only be assigned once and are then immutable.
+The types of variables are currently inferred from the initialization expression.
+
+Input declares a variable whose value will be provided externally to the mapper. 
+The type need not be provided explicitly in the mapper file, but it must be known at compile time.
+
+Output declares an output object which can be assigned to in the main body of the mapper file.
+`ouput OutputObject,`
 
 
 ## Random Questions
@@ -74,9 +90,9 @@ If we use NodeObject and NodeArray in the context of a choice expression, there'
 
 ## TODO
 
-implement parseDeclaration so that we can declare variables
-finish implementing identifier resolution
 implement some means to poke identifiers into the Mapping context
+    input and output declarations
+        declaration is separate from use as in mapping node
 implement member access with dot operator
 implement method access and evaluation
 

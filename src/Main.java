@@ -1,12 +1,8 @@
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.EnumSet;
-import java.util.ArrayList;
 import java.util.Scanner;
 
-import java.lang.Character;
-import java.lang.Math;
 import java.lang.StringBuilder;
 
 public class Main {

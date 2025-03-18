@@ -7,7 +7,6 @@
 public class NodeMapping extends Node {
     public NodeMapping(NodeScope parent, Token token, String name) {
         super(parent, token);
-        this.kind = Kind.MAPPING;
         this.name = name;
     }
 

@@ -12,6 +12,11 @@ public class NodeMethodCall extends Node {
 
     // NOTE: type_hint here is the base object type, not the result type.
     public boolean typecheck(Class type_hint) {
+        // get all overloaded methods by name
+        // filter by number of arguments first
+        // then do the manual checks per argument and determine cast distance for each possible overload
+        // then select best overload
+        // second pass over arguments to maybe wrap them for implicit casts or coerce type
         return true;
     }
 

@@ -5,3 +5,12 @@ var object: {
     string: "some string"
 }
 
+
+meta: {
+    name:    "Mapper Test",
+    input:   [ inputObject  ],
+    output:  [ outputObject ]
+}
+
+
+

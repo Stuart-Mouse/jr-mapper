@@ -9,6 +9,8 @@ public class NodeDeclaration extends Node {
     Node   valueNode;
     Object value;
 
+    public enum DeclarationType { VAR, INPUT, OUTPUT };
+
     public boolean typecheck(Class hint_type) {
         if (!valueNode.typecheck(hint_type))  return false;
         valueType = valueNode.valueType;
