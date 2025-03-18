@@ -122,4 +122,18 @@ provide warnings and error messages for
     use of variable in its own declaration
 
 
+I would like to probably simplify the ontology of nodes a bit
+    maybe mapping and declaration can just be the same thing, with an enum to denote declaration type (variable, input, output)
+    or we should make the declaration abstract, implemented by variable/input/output subclasses
+
+with a nodemapping being a subclass of declaration, we now have a slight conundrum for output objects
+    if we have a nodemapping, then I suppose we just lookup the identifier as an output object and somehow link those together
+    maybe we just remove nodemapping and replace it with a nodeoutputDeclaration
+
+the output definition must then link back to the output declaration
+
+perhaps we can have a statement type which can be a declaration or definition
+
+
+
 
