@@ -13,28 +13,37 @@ public class NodeOperation extends Node {
     Node      right;
 
     public boolean typecheck(Class hint_type) {
-        if ( left.valueType != null && Number.class.isAssignableFrom( left.valueType)
-         && right.valueType != null && Number.class.isAssignableFrom(right.valueType)) {
-            // TODO: pre-emptively get wider of two Number types and set as hint_type in below calls to typecheck()
-        }
+        // TODO: unary operations
 
-        if (! left.typecheck(null)) {
+        // NOTE: commented out the below because realistically we will always have a type hint provided.
+//        Class  left_type =  left.getValueType();
+//        Class right_type = right.getValueType();
+//
+//        if ( left_type != null && Number.class.isAssignableFrom( left_type)
+//         && right_type != null && Number.class.isAssignableFrom(right_type)) {
+//            // TODO: pre-emptively get wider of two Number types and set as hint_type in below calls to typecheck()
+//        }
+
+        if (! left.typecheck(hint_type)) {
             System.out.println(left.location() + ": Error: failed to typecheck left side of binary operation.");
             return false;
         }
-        if (!right.typecheck(null)) {
+        if (!right.typecheck(hint_type)) {
             System.out.println(right.location() + ": Error: failed to typecheck right side of binary operation.");
             return false;
         }
 
-        if (left.valueType != right.valueType) {
+        Class  left_type =  left.getValueType();
+        Class right_type = right.getValueType();
+
+        if (left_type != right_type) {
             // TODO: if left and right types don't match, we can try to coerce to the wider of the two types.
-            System.out.println("Error: left and right types of operation do not match: " + left.valueType + " vs " + right.valueType + ".");
+            System.out.println("Error: left and right types of operation do not match: " + left_type + " vs " + right_type + ".");
             return false;
         }
 
         // TODO: verify that we can always assume that an operation will have the same type as its operands.
-        valueType = left.valueType;
+        valueType = left_type;
 
         flags.add(Flags.TYPECHECKED);
         return true;
@@ -49,9 +58,9 @@ public class NodeOperation extends Node {
         return true;
     }
 
-    public Object evaluate() {
-        var lv =  left.evaluate();
-        var rv = right.evaluate();
+    public Object evaluate(Object hint_value) {
+        var lv =  left.evaluate(null);
+        var rv = right.evaluate(null);
 
         if (lv instanceof Number && rv instanceof Number) {
             switch (operator) {

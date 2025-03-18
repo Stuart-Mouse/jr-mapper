@@ -13,22 +13,27 @@ public class NodeArray extends NodeScope {
     ArrayList<Node> valueNodes;
 
     public boolean typecheck(Class hint_type) {
-        valueType = String.class;
+        for (var node: valueNodes) {
+            if (!node.typecheck(hint_type)) {
+
+            }
+        }
+        valueType = hint_type;
         flags.add(Flags.TYPECHECKED);
         return true;
     }
 
-    public boolean serialize(StringBuilder sb) {
-        sb.append("{\n");
+    public boolean serialize(StringBuilder sb/*, int indent, boolean sameline*/) {
+        sb.append("[\n");
         for (var node: valueNodes) {
             node.serialize(sb);
             sb.append(",\n");
         }
-        sb.append("}");
+        sb.append("]");
         return true;
     }
 
-    public Object evaluate() {
+    public Object evaluate(Object hint_value) {
         assert(flags.contains(Flags.TYPECHECKED));
         // depending on valueType determined during typechecking, we may need to append elements differently
         // or maybe there's some general enough container methods that we can call, since basically all we need is some .append() method

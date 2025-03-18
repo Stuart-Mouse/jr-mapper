@@ -12,12 +12,47 @@ public class Parser {
     public Parser() { currentScope = root; }
 
     public Lexer      lexer             = new Lexer();
-    public NodeScope  root              = new NodeScope(null, null);
+    public NodeObject root              = new NodeObject(null, null);
     public NodeScope  currentScope;     // TODO: maybe this should be passed as param instead?
+    public MetaData   metaData;
+
+    public static class MetaData {
+        String  name;
+        int     id;
+    };
 
     public Node parseExpression(String expr) {
         lexer.init(expr);
         return parseExpression(0);
+    }
+
+    public NodeMapping getMetaNode() {
+        for (var node: root.fields) {
+            if (node instanceof NodeMapping mapping) {
+                if (mapping.name.equals("meta")) {
+                    return mapping;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Node parseFile(String input) {
+        lexer.init(input);
+        root = new NodeObject(null, null);
+        if (lexer.expectToken(Token.CLOSE_BRACE) == null) {
+            root.fields = parseDeclarations(Token.CLOSE_BRACE);
+            if (root.fields == null) {
+                System.out.println("Error while trying to parse inner declarations of NodeObject.");
+                return null;
+            }
+            for (var field: root.fields) {
+                if (field instanceof NodeDeclaration decl) {
+                    root.addDeclaration(decl);
+                }
+            }
+        }
+        return root;
     }
 
     /*
@@ -141,6 +176,11 @@ public class Parser {
                         System.out.println("Error while trying to parse inner declarations of NodeObject.");
                         return null;
                     }
+                    for (var field: node.fields) {
+                        if (field instanceof NodeDeclaration decl) {
+                            root.addDeclaration(decl);
+                        }
+                    }
                 }
                 return node;
             }
@@ -206,8 +246,22 @@ public class Parser {
                     System.out.println("Error: failed while trying to parse value expression in variable declaration at " + token.location() + ".");
                     return null;
                 }
-                lexer.expectToken(Token.COMMA); // consume comma if present
 
+                boolean is_aggregate = declaration.valueNode instanceof NodeObject
+                                    || declaration.valueNode instanceof NodeArray;
+                if (is_aggregate) {
+                    // comma after expression is optional if the expression was an object or array
+                    lexer.expectToken(Token.COMMA);
+                } else {
+                    var next_token = lexer.peekToken();
+                    switch (next_token.type()) {
+                        case Token.CLOSE_BRACE, Token.CLOSE_BRACKET: break;
+                        case Token.COMMA: lexer.getToken(); break;
+                        default:
+                            System.out.println(next_token.location() + ": Error: unexpected token '" + next_token.text() + "' at end of expression. Expected a comma or end of scope.");
+                            break;
+                    }
+                }
                 return declaration;
 
             case Token.IDENTIFIER:

@@ -17,7 +17,7 @@ public class NodeMapping extends Node {
 
     public boolean typecheck(Class hint_type) {
         if (!valueNode.typecheck(hint_type))  return false;
-        valueType = valueNode.valueType;
+        valueType = valueNode.getValueType();
         flags.add(Flags.TYPECHECKED);
         return true;
     }
@@ -28,9 +28,9 @@ public class NodeMapping extends Node {
         return true;
     }
 
-    public Object evaluate() {
+    public Object evaluate(Object hint_value) {
         // NOTE: we only need to evaluate this once, then we can just return the same value
-        if (value == null)  value = valueNode.evaluate();
+        if (value == null)  value = valueNode.evaluate(hint_value);
         return value;
     }
 }

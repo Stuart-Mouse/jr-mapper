@@ -15,7 +15,7 @@ public class NodeIdentifier extends Node {
             System.out.println(location() + ": Error: failed to resolve declaration for identifier '" + name + "'.");
             return false;
         }
-        valueType = resolvedDeclaration.valueType;
+        valueType = resolvedDeclaration.getValueType();
         flags.add(Flags.TYPECHECKED);
         return true;
     }
@@ -27,8 +27,8 @@ public class NodeIdentifier extends Node {
         return true;
     }
 
-    public Object evaluate() {
-        return resolvedDeclaration.evaluate();
+    public Object evaluate(Object hint_value) {
+        return resolvedDeclaration.evaluate(hint_value);
     }
 }
     

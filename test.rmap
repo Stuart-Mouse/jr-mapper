@@ -1,16 +1,11 @@
-
+meta: {
+    name: "Mapper Test (" + filename + ")",
+    id: 3535
+    var filename: "test.rmap",
+}
 
 var object: {
     number: 5,
     string: "some string"
 }
-
-
-meta: {
-    name:    "Mapper Test",
-    input:   [ inputObject  ],
-    output:  [ outputObject ]
-}
-
-
 

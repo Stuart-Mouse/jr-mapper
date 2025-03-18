@@ -15,18 +15,31 @@ public class Main {
             String input = Files.readString(filePath);
 
             var parser = new Parser();
-            var root = parser.parseDeclaration(input);
+            var root = parser.parseFile(input);
             if (root == null) {
-                throw new RuntimeException("Failed to parse declaration!");
+                throw new RuntimeException("Failed to parse file!");
+            }
+            var meta = parser.getMetaNode();
+            if (!meta.typecheck(Parser.MetaData.class)) {
+                throw new RuntimeException("Failed to typecheck file metadata!");
+            }
+            parser.metaData = new Parser.MetaData();
+            parser.metaData = (Parser.MetaData)(meta.evaluate(parser.metaData));
+            if (parser.metaData == null) {
+                throw new RuntimeException("Failed to evaluate file metadata!");
             }
 //            if (!root.typecheck(null)) {
-//                throw new RuntimeException("Failed to typecheck declaration!");
+//                throw new RuntimeException("Failed to typecheck file!");
 //            }
             var sb = new StringBuilder();
             root.serialize(sb);
             System.out.println(sb.toString());
+
+            System.out.println("parser.metaData.name: " + parser.metaData.name);
+            System.out.println("parser.metaData.id: " + parser.metaData.id);
+
         } catch(Exception e) {
-            System.out.println(e.toString());
+            System.out.println("Exception: " + e.toString());
         }
 
         // REPL Test
@@ -65,7 +78,7 @@ public class Main {
                 }
             }
 
-            var result = root.evaluate();
+            var result = root.evaluate(null);
             System.out.println("-> " + result.toString());
         }
     }

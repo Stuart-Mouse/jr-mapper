@@ -32,7 +32,7 @@ public class NodeMethodCall extends Node {
         return true;
     }
 
-    public Object evaluate() {
+    public Object evaluate(Object hint_value) {
         // evaluate method expression
         // evaluate all parameters
         // collect parameters into list of Objects

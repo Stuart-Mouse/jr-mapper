@@ -32,7 +32,7 @@ public class NodeScope extends Node {
     public boolean serialize(StringBuilder sb) {
         return true;
     }
-    public Object evaluate() {
+    public Object evaluate(Object hint_value) {
         return null;
     }
 }

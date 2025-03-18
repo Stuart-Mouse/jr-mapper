@@ -3,6 +3,7 @@
     The sub-nodes of a NodeObject are all NodeFields.
 */
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 public class NodeObject extends NodeScope {
@@ -19,6 +20,19 @@ public class NodeObject extends NodeScope {
         // In the future, we may also support an explicit type identifier using the `Type.{}` syntax or similar.
         if (hint_type == null) return false;
         valueType = hint_type;
+
+        for (var field_node: fields) {
+            Class field_hint_type = null;
+            if (field_node instanceof NodeMapping mapping) {
+                try {
+                    field_hint_type = valueType.getDeclaredField(mapping.name).getType();
+                } catch (NoSuchFieldException e) {
+                    System.out.println(mapping.location() + ": Warning: no such field '" + mapping.name + "' on object of type " + valueType + ".");
+                }
+            }
+            if (!field_node.typecheck(field_hint_type)) return false;
+        }
+
         flags.add(Flags.TYPECHECKED);
         return true;
     }
@@ -35,16 +49,40 @@ public class NodeObject extends NodeScope {
         return true;
     }
 
-    public Object evaluate() {
+    public Object evaluate(Object hint_value) {
         assert(flags.contains(Flags.TYPECHECKED));
-        Object value = null;
-        try {
-            value = valueType.getDeclaredConstructor().newInstance();
-            // TODO: iterate over all fields, executing them and assigning their results to the correct members of 'value'
+//        assert(hint_value.getClass().equals(valueType));
+        Object value = hint_value;
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        // only need to initialize new object if none was provided
+        if (value == null) {
+            try {
+                value = valueType.getDeclaredConstructor().newInstance();
+                // TODO: is there some way we can create an object without needing to invoke the constructor?
+                //       if not, we will probably want to add to the typechecking step some logic that ensures all constructor fields are declared
+                //       perhaps we can even have some special syntax for constructor parameters as opposed to normal fields
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
+
+        for (var field_node: fields) {
+            field_node.evaluate(null);
+            if (field_node instanceof NodeMapping mapping) {
+                try {
+                    Field field = valueType.getDeclaredField(mapping.name);
+                    assert(field.getType().equals(mapping.valueType));
+                    field.setAccessible(true);
+                    field.set(value, mapping.value);
+                } catch (NoSuchFieldException e) {
+                    System.out.println(mapping.location() + ": Error: no such field '" + mapping.name + "' on object of type " + valueType + ".");
+                } catch (IllegalAccessException e) {
+                    System.out.println(mapping.location() + ": Error: field '" + mapping.name + "' on object of type '" + valueType + "' is not accessible.");
+                    return false;
+                }
+            }
+        }
+
         return value;
     }
 }

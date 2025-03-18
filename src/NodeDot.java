@@ -23,7 +23,7 @@ public class NodeDot extends Node {
             try {
                 // here we just check that the field exists.
                 // maybe we should store it somewhere though, so that we don't have to do this again in evaluate().
-                Field field = left.valueType.getField(identifier.name);
+                Field field = left.valueType.getDeclaredField(identifier.name);
             } catch (NoSuchFieldException e) {
                 System.out.println(identifier.location() + ": Error: no such field '" + identifier.name + "' on object of type '" + left.valueType + "'.");
                 return false;
@@ -37,7 +37,7 @@ public class NodeDot extends Node {
             return false;
         }
 
-        valueType = right.valueType;
+        valueType = right.getValueType();
         flags.add(Flags.TYPECHECKED);
         return true;
     }
@@ -51,12 +51,12 @@ public class NodeDot extends Node {
         return true;
     }
 
-    public Object evaluate() {
-        var left_value = left.evaluate();
+    public Object evaluate(Object hint_value) {
+        var left_value = left.evaluate(null);
         if (left_value == null) return null;
 
         if (right instanceof NodeIdentifier identifier) {
-            var right_value = right.evaluate();
+            var right_value = right.evaluate(null);
             if (right_value == null) return null;
             try {
                 Field field = left.valueType.getField(identifier.name);
@@ -69,6 +69,7 @@ public class NodeDot extends Node {
                 System.out.println(identifier.location() + ": Error: field '" + identifier.name + "' on object of type '" + left.valueType + "' is not accessible.");
                 return false;
             }
+            return right_value;
         }
         else if (right instanceof NodeMethodCall method_call) {
             // method_call.resolvedMethod.invoke();

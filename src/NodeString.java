@@ -21,7 +21,7 @@ public class NodeString extends Node {
         return true;
     }
 
-    public Object evaluate() {
+    public Object evaluate(Object hint_value) {
         assert(flags.contains(Flags.TYPECHECKED));
         return value;
     }

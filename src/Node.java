@@ -38,13 +38,13 @@ public abstract class Node {
         }
     }
 
-    public NodeScope        parentScope;
-    public EnumSet<Flags>   flags = EnumSet.noneOf(Flags.class);
-    public Class            valueType;
+    public    NodeScope       parentScope;
+    public    EnumSet<Flags>  flags = EnumSet.noneOf(Flags.class);
+    protected Class           valueType;
 
-    // source location info, copied from token on init
-    public int line;
-    public int column;
+    // source location info, copied from token in constructor
+    protected int line;
+    protected int column;
 
     public String location() {
         return "(" + line + ":" + column + ")";
@@ -57,7 +57,8 @@ public abstract class Node {
         public static final EnumSet<Flags> ALL = EnumSet.allOf(Flags.class);
     }
 
+    public Class getValueType() { return valueType; };
     public abstract boolean typecheck(Class hint_type);
     public abstract boolean serialize(StringBuilder sb);
-    public abstract Object  evaluate();
+    public abstract Object  evaluate(Object hint_value);
 }
