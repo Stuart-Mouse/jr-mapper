@@ -7,6 +7,7 @@
 */
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 public class Parser {
     public Parser() { currentScope = root; }
@@ -16,10 +17,26 @@ public class Parser {
     public NodeScope  currentScope;
     public MetaData   metaData;
 
+    // Used during typechecking to detect dependency cycles between declarations and mappings.
+    public Stack<Node> dependencyChain   = new Stack<Node>();
+
     public static class MetaData {
         String  name;
         int     id;
     };
+
+    public boolean setVariable(String name, Object value, Class type) {
+        var declaration = root.resolveDeclaration(name);
+        if (declaration == null || declaration.declarationType != null) {
+            System.out.println("Error: attempt to set variable '" + name + "' invalidly.");
+            return false;
+        }
+        declaration.declarationType = NodeDeclaration.DeclarationType.EXTERNAL;
+        declaration.valueType = type;
+        declaration.value = value;
+//        assert(value instanceof type); // any way to do this?
+        return true;
+    }
 
     public Node parseExpression(String expr) {
         lexer.init(expr);
@@ -226,6 +243,7 @@ public class Parser {
                 }
 
                 var declaration = new NodeDeclaration(currentScope, var_token, identifier.text());
+                declaration.declarationType = NodeDeclaration.DeclarationType.INTERNAL;
 
                 var other = currentScope.addDeclaration(declaration);
                 if (other != null) {
@@ -298,4 +316,17 @@ public class Parser {
         return declarations;
     }
 
+    public boolean typecheck() {
+        for (var field_node: root.declarations) {
+            if (!field_node.typecheck(null)) return false;
+        }
+        return true;
+    }
+
+    public boolean evaluate() {
+        for (var field_node: root.declarations) {
+            if (field_node.evaluate(null) == null) return false;
+        }
+        return true;
+    }
 }

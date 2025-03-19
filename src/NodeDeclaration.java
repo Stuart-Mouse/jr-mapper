@@ -9,9 +9,17 @@ public class NodeDeclaration extends Node {
     Node   valueNode;
     Object value;
 
-    public enum DeclarationType { VAR, INPUT, OUTPUT };
+    // DeclarationType is used only by this class atm, not by NodeMapping. Some refactoring will probably be necessary later...
+    // this does not get set in constructor, but it does need to be resolved during typechecking at the latest
+    DeclarationType declarationType;
+    public enum DeclarationType { INTERNAL, EXTERNAL };
 
     public boolean typecheck(Class hint_type) {
+        if (declarationType == null) {
+            System.out.println(location() + ": Error: declarationType was null in typecheck().");
+            return false;
+        }
+
         if (!valueNode.typecheck(hint_type))  return false;
         valueType = valueNode.getValueType();
         flags.add(Flags.TYPECHECKED);
@@ -35,8 +43,10 @@ public class NodeDeclaration extends Node {
     }
 
     public Object evaluate(Object hint_value) {
-        // NOTE: we only need to evaluate this once, then we can just return the same value
-        if (value == null)  value = valueNode.evaluate(hint_value);
+        if (flags.contains(Flags.EVALUATED)) return value;
+        if (value != null) hint_value = value;  // TODO: is this a bad hack? we have to do this in order to use the value that was set on a mapping node manually be setVariable
+        value = valueNode.evaluate(hint_value);
+        flags.add(Flags.EVALUATED);
         return value;
     }
 }

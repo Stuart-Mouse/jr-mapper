@@ -52,6 +52,7 @@ public abstract class Node {
 
     public enum Flags {
         TYPECHECKED,
+        EVALUATED,
         PARENTHESIZED;
 
         public static final EnumSet<Flags> ALL = EnumSet.allOf(Flags.class);

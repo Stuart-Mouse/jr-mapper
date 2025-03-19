@@ -4,7 +4,4 @@ meta: {
 }
 
 var filename: "test.rmap",
-var string:   "some string"
-var number:   5,
-
 

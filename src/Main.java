@@ -19,18 +19,23 @@ public class Main {
             if (root == null) {
                 throw new RuntimeException("Failed to parse file!");
             }
-            var meta = parser.getMetaNode();
-            if (!meta.typecheck(Parser.MetaData.class)) {
-                throw new RuntimeException("Failed to typecheck file metadata!");
-            }
-            parser.metaData = new Parser.MetaData();
-            parser.metaData = (Parser.MetaData)(meta.evaluate(parser.metaData));
-            if (parser.metaData == null) {
-                throw new RuntimeException("Failed to evaluate file metadata!");
-            }
-//            if (!root.typecheck(null)) {
-//                throw new RuntimeException("Failed to typecheck file!");
+//            var meta = parser.getMetaNode();
+//            if (!meta.typecheck(Parser.MetaData.class)) {
+//                throw new RuntimeException("Failed to typecheck file metadata!");
 //            }
+            parser.metaData = new Parser.MetaData();
+            parser.setVariable("meta", parser.metaData, Parser.MetaData.class);
+//            parser.metaData = (Parser.MetaData)(meta.evaluate(parser.metaData));
+//            if (parser.metaData == null) {
+//                throw new RuntimeException("Failed to evaluate file metadata!");
+//            }
+            if (!parser.typecheck()) {
+                throw new RuntimeException("Failed to typecheck file!");
+            }
+            if (!parser.evaluate()) {
+                throw new RuntimeException("Failed to evaluate file!");
+            }
+
             var sb = new StringBuilder();
             root.serialize(sb);
             System.out.println(sb.toString());

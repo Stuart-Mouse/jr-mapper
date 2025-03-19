@@ -9,6 +9,21 @@ public class NodeMapping extends NodeDeclaration {
         super(parent, token, name);
     }
 
+    public boolean typecheck(Class hint_type) {
+        if (valueType == null && hint_type == null) {
+            System.out.println(location() + ": Error: unable to resolve type for mapping node. If this is a root-level output node, then you must call setVariable to provide an output object before typechecking the file.");
+            return false;
+        }
+        if (valueType != null)  hint_type = valueType;
+
+        if (!valueNode.typecheck(hint_type))  return false;
+        if (valueType != null)  assert(valueNode.getValueType() == valueType);
+        else valueType = valueNode.getValueType();
+
+        flags.add(Flags.TYPECHECKED);
+        return true;
+    }
+
     @Override
     public boolean serialize(StringBuilder sb) {
         sb.append(name).append(": ");
