@@ -11,7 +11,16 @@ public class NodeDot extends Node {
     Node left, right;
 
     public boolean typecheck(Class hint_type) {
-        if (!left.typecheck(null)) return false;
+        // NOTE: currently just reaching in and grabbing the left valueType directly.
+        //       this is just a temporary state of affairs, but it presents an interesting problem,
+        //       that is, we cannot mark the object node as typechecked until after ALL of its internals have been typechecked
+        //       but, because all objects need to be type hinted anyhow, it's actually fine to grab the valueType BEFORE the typechecked flag is set
+        //       in the longer term we need to codify more concretely how this situation will resolve
+        var left_type = left.getValueType();
+        if (left_type == null) {
+            System.out.println(left.location() + ": Error: failed to get left type in binary dot.");
+            return false;
+        }
 
         // Looks like we will actually not have a method call as right side here, instead we would have the NodeDot in the methodExpression slot of the method call.
         // Unless of course we just make the parsing such that a method expression binds closer than a dot expression.
@@ -23,7 +32,9 @@ public class NodeDot extends Node {
             try {
                 // here we just check that the field exists.
                 // maybe we should store it somewhere though, so that we don't have to do this again in evaluate().
-                Field field = left.valueType.getDeclaredField(identifier.name);
+                Field field = left_type.getDeclaredField(identifier.name);
+                right.valueType = field.getType();
+                right.flags.add(Flags.TYPECHECKED);
             } catch (NoSuchFieldException e) {
                 System.out.println(identifier.location() + ": Error: no such field '" + identifier.name + "' on object of type '" + left.valueType + "'.");
                 return false;

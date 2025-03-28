@@ -135,5 +135,62 @@ the output definition must then link back to the output declaration
 perhaps we can have a statement type which can be a declaration or definition
 
 
+before refactoring how nodes are structured, we need to establish the semantics of declarations 
+    which means figuring out how we want to do constructors 
+
+we could use walrus operator syntax to provide type/constructor separate from value
+
+field_name: Object() = {};
+
+or 
+
+field_name: Object();
+field_name = {};
+
+if we have slots on some mapping or declaration node for both type/constructor and value, then when we resolve a mapping value
+we can just stick that mapping node onto the original declaration, even if the two are lexically separated
+we could even do lexically split or multiple assignment expressions, so long as individual fields are not multiply assigned
+but maybe this would just be too weird in both semantics and implementation...
+
+field_name = { a = 5 };
+field_name = { b = 3 };
+
+
+
+NodeMapping
+    Class value_type;
+    Node type_expression;
+    ArrayList<Node> constructor_parameters;
+    Node value_expression;
+
+
+Get rid of getValueType(), have typecheck() return the type
+    Or, make getValueType() common to all nodes and make typecheck() private
+    that way, we have only a single entry point for nodes to get types from one antoerh
+    then, make getValueType and typecheck push/pop from a stack of dependent nodes
+    that way we can detect and report dependency cycles
+
+I can't really figure out a proper solution until I talk with Nathan about how they currently deal with constructors
+it may be the case that they just don't really use constructors in mappers (which would honestly be preferable)
+
+
+
+do something else for now then..
+dot member access
+
+running into some interesting problems with cycles here
+
+in typehcekcing, we have these weird loops were in some cases we are fine to get a value type from a node bfore that node is actually flagged as typechecked
+
+likewise, we will want to be able to get an object reference for an object which has not yet completed its evaluation.
+    this one is a bit more problematic, since we don't pre-allocate everything as we do for data bindings in GON / LSD
+
+
+
+
+
+
+
+
 
 

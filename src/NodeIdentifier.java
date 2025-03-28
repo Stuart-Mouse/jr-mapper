@@ -9,6 +9,15 @@ public class NodeIdentifier extends Node {
     String name;
     NodeDeclaration  resolvedDeclaration;
 
+    @Override
+    public Class getValueType() {
+        if (valueType == null) {
+            typecheck(null);
+        }
+        return valueType;
+    }
+
+
     public boolean typecheck(Class hint_type) {
         resolvedDeclaration = parentScope.resolveDeclaration(name);
         if (resolvedDeclaration == null) {

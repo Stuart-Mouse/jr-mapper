@@ -30,7 +30,7 @@ public class NodeDeclaration extends Node {
     // TODO: we will need to implement some checking for circular references here.
     @Override
     public Class getValueType() {
-        if (!flags.contains(Flags.TYPECHECKED)) {
+        if (valueType == null) {
             typecheck(null);
         }
         return valueType;

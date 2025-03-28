@@ -26,6 +26,9 @@ public class NodeScope extends Node {
                 return decl;
             }
         }
+        if (parentScope != null) {
+            return parentScope.resolveDeclaration(identifier);
+        }
         return null;
     }
 

@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public class Parser {
-    public Parser() { currentScope = root; }
+    public Parser() { }
 
     public Lexer      lexer             = new Lexer();
-    public NodeObject root              = new NodeObject(null, null);
+    public NodeObject root;
     public NodeScope  currentScope;
     public MetaData   metaData;
 
@@ -21,8 +21,9 @@ public class Parser {
     public Stack<Node> dependencyChain   = new Stack<Node>();
 
     public static class MetaData {
-        String  name;
-        int     id;
+        public String  name;
+        public String  extension;
+        public int     id;
     };
 
     public boolean setVariable(String name, Object value, Class type) {
@@ -57,6 +58,7 @@ public class Parser {
     public Node parseFile(String input) {
         lexer.init(input);
         root = new NodeObject(null, null);
+        currentScope = root;
         if (lexer.expectToken(Token.CLOSE_BRACE) == null) {
             root.declarations = parseDeclarations(Token.CLOSE_BRACE);
             if (root.declarations == null) {
@@ -114,14 +116,24 @@ public class Parser {
         System.out.println("enter parseBinary");
         Token token = lexer.peekToken();
 
-        // switch (token.type) {
-        //   case Token.OPEN_PAREN:
-        //     // parse argument list and create procedure node
-        //   case Token.DOT:
-        //     // binary dot, probably only to be used for member access in this language
-        //   case Token.OPEN_BRACKET:
-        //     // array indexer
-        // }
+         switch (token.type()) {
+             case Token.DOT: // binary dot, for member access of method calls
+                 lexer.getToken(); // eat the dot
+                 var dot = new NodeDot(currentScope, token);
+                 dot.left = left;
+                 var identifier_token = lexer.getToken();
+                 if (identifier_token.type() != Token.IDENTIFIER) {
+                     System.out.println(identifier_token.location() + ": Error: expected an identifier after dot.");
+                     return null;
+                 }
+                 dot.right = new NodeIdentifier(currentScope, identifier_token);
+                 return dot;
+
+             //   case Token.OPEN_PAREN:
+             //     // parse argument list and create procedure node
+             //   case Token.OPEN_BRACKET:
+             //     // array indexer
+         }
 
         Operator op = Operator.fromToken(token, false);
         if (op != null && op.precedence > min_prec) {
@@ -181,30 +193,37 @@ public class Parser {
 //            }
             case Token.OPEN_BRACE: {
                 var node = new NodeObject(currentScope, token);
+                currentScope = node;
                 if (lexer.expectToken(Token.CLOSE_BRACE) == null) {
                     // TODO: if we allow variable declarations in objects, we should probably inline parseDeclarations here so that we can put variable decls and mapping fields into separate arrays.
                     node.declarations = parseDeclarations(Token.CLOSE_BRACE);
                     if (node.declarations == null) {
                         System.out.println("Error while trying to parse inner declarations of NodeObject.");
+                        currentScope = node.parentScope;
                         return null;
                     }
                 }
+                currentScope = node.parentScope;
                 return node;
             }
             case Token.OPEN_BRACKET: {
                 var node = new NodeArray(currentScope, token);
+                currentScope = node;
                 if (lexer.expectToken(Token.CLOSE_BRACKET) != null) {
                     node.valueNodes = parseCommaSeparatedExpressions();
                     if (node.valueNodes == null) {
                         System.out.println("Error while trying to parse inner declarations of NodeObject.");
+                        currentScope = node.parentScope;
                         return null;
                     }
                     var close_bracket = lexer.getToken();
                     if (close_bracket.type() != Token.CLOSE_BRACKET) {
                         System.out.println("Error: expected closing bracket at " + close_bracket.location() + " to end array at " + node.location());
+                        currentScope = node.parentScope;
                         return null;
                     }
                 }
+                currentScope = node.parentScope;
                 return node;
             }
         }

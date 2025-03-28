@@ -15,6 +15,7 @@ public class NodeMapping extends NodeDeclaration {
             return false;
         }
         if (valueType != null)  hint_type = valueType;
+        else valueType = hint_type;
 
         if (!valueNode.typecheck(hint_type))  return false;
         if (valueType != null)  assert(valueNode.getValueType() == valueType);
