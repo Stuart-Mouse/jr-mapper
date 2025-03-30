@@ -22,7 +22,6 @@ public class Parser {
 
     public static class MetaData {
         public String  name;
-        public String  extension;
         public int     id;
     };
 

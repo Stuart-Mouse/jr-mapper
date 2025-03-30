@@ -4,13 +4,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 
 public class NodeDot extends Node {
-    public NodeDot(NodeScope parentScope, Token token) {
+    NodeDot(NodeScope parentScope, Token token) {
         super(parentScope, token);
     }
 
     Node left, right;
 
-    public boolean typecheck(Class hint_type) {
+    boolean typecheck(Class hint_type) {
         // NOTE: currently just reaching in and grabbing the left valueType directly.
         //       this is just a temporary state of affairs, but it presents an interesting problem,
         //       that is, we cannot mark the object node as typechecked until after ALL of its internals have been typechecked
@@ -53,7 +53,7 @@ public class NodeDot extends Node {
         return true;
     }
 
-    public boolean serialize(StringBuilder sb) {
+    boolean serialize(StringBuilder sb) {
         if (flags.contains(Flags.PARENTHESIZED)) sb.append("(");
         left.serialize(sb);
         sb.append(".");
@@ -62,17 +62,15 @@ public class NodeDot extends Node {
         return true;
     }
 
-    public Object evaluate(Object hint_value) {
+    Object evaluate(Object hint_value) {
         var left_value = left.evaluate(null);
         if (left_value == null) return null;
 
         if (right instanceof NodeIdentifier identifier) {
-            var right_value = right.evaluate(null);
-            if (right_value == null) return null;
             try {
                 Field field = left.valueType.getField(identifier.name);
-                // field.setAccessible(true); // TODO: do we want to do this?
-                field.set(left_value, right_value);
+                field.setAccessible(true); // TODO: do we want to do this?
+                return field.get(left_value);
             } catch (NoSuchFieldException e) {
                 System.out.println(identifier.location() + ": Error: no such field '" + identifier.name + "' on object of type '" + left.valueType + "'.");
                 return false;
@@ -80,7 +78,6 @@ public class NodeDot extends Node {
                 System.out.println(identifier.location() + ": Error: field '" + identifier.name + "' on object of type '" + left.valueType + "' is not accessible.");
                 return false;
             }
-            return right_value;
         }
         else if (right instanceof NodeMethodCall method_call) {
             // method_call.resolvedMethod.invoke();

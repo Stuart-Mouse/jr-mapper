@@ -1,6 +1,6 @@
 
 public class NodeDeclaration extends Node {
-    public NodeDeclaration(NodeScope parentScope, Token token, String name) {
+    NodeDeclaration(NodeScope parentScope, Token token, String name) {
         super(parentScope, token);
         this.name = name;
     }
@@ -14,7 +14,7 @@ public class NodeDeclaration extends Node {
     DeclarationType declarationType;
     public enum DeclarationType { INTERNAL, EXTERNAL };
 
-    public boolean typecheck(Class hint_type) {
+    boolean typecheck(Class hint_type) {
         if (declarationType == null) {
             System.out.println(location() + ": Error: declarationType was null in typecheck().");
             return false;
@@ -26,25 +26,31 @@ public class NodeDeclaration extends Node {
         return true;
     }
 
+    @Override
+    Object getValue() {
+        return value;
+    }
+
     // NodeDeclaration overrides getValueType to allow forward-referencing identifiers.
     // TODO: we will need to implement some checking for circular references here.
     @Override
-    public Class getValueType() {
+    Class getValueType() {
         if (valueType == null) {
             typecheck(null);
         }
         return valueType;
     }
 
-    public boolean serialize(StringBuilder sb) {
+    boolean serialize(StringBuilder sb) {
         sb.append("var ").append(name).append(": ");
         valueNode.serialize(sb);
         return true;
     }
 
-    public Object evaluate(Object hint_value) {
+    Object evaluate(Object hint_value) {
         if (flags.contains(Flags.EVALUATED)) return value;
-        if (value != null) hint_value = value;  // TODO: is this a bad hack? we have to do this in order to use the value that was set on a mapping node manually be setVariable
+        if (value != null) hint_value = value;  // TODO: is this a bad hack? we have to do this in order to use the value that was set on a mapping node manually by setVariable
+        else value = hint_value;
         value = valueNode.evaluate(hint_value);
         flags.add(Flags.EVALUATED);
         return value;

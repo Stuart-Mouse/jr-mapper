@@ -187,6 +187,49 @@ likewise, we will want to be able to get an object reference for an object which
 
 
 
+So In my attempt to just do a basic test, but having only one external object to reference, I created a fun little circular dependency which is actually a bit complex.
+We have some object 'Obj' with members A and B.
+Then we have some other variable E which is declared outside the object.
+A has a dependency on E and E has a dependency on B.
+Since E is outside Obj, it must refer to B as Obj.B
+In resolving the Dot node, we have to first evaluate Obj since we cannot access a member of an object unless we have the object itself.
+but we cannot finish evaluating Obj until we have the value of A, since A depends on E
+Really, we should be able to untangle this, probably by resolving the dependency on the Dot more specifically, so that it ultimately references Obj.B directly and does not require the complete value of Obj
+But do we actually care enough to make this work?
+It seems like there is just too much we end up having to disentangle in order to make that happen.
+To even get as far as the evaluation issue, I first had to do a bit of a hack on the typechecking to implement a separate getValueType method
+    which is able to sometimes return a hinted value type before the actual typechecking for a node is fully complete
+    we can do similar for evaluation, getting the object reference for the left side of a dot expression before actually evaluating that object
+    but then we need some way of knowing that the referenced member has been evaluated already
+        maybe we could have a step to linearize nodes as a pre-pass for evaluation, so that at least 
+        could add nodes to some global array as they pass typechecking, and if I'm thinking correctly, the order would be a valid way in which to evaluate the nodes
+            push nodes onto queue open starting typecheck, pop off queue and add to completed list when done
+            so we track dependencies and sort nodes for evaluation in the one pass over AST
+
+for dot nodes which are dependent only on the right side member of some object
+maybe we want to have some resolveddeclaration ptr like we have for dientifiers, and just treat the dot node like an identifier to that member node
+    but there could potentially be some tricky shit with how this would play with constructors or other method calls which can affect the state of an object
+    the simple fact that everything in java is object oriented does not really play super nice with the declarative nature of the mappers...
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

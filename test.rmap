@@ -1,7 +1,11 @@
 meta: {
     name: "Mapper Test (" + filename + ")",
-    id: 3535,
-    extension: "rmap",
+    id: meta2.id,
 }
 
-var filename: "test." + meta.extension,
+meta2: {
+    name: "rmap",
+    id: 3535,
+}
+
+var filename: "test." + meta2.name,

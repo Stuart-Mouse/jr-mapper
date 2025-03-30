@@ -30,7 +30,7 @@
 import java.util.EnumSet;
 
 public abstract class Node {
-    public Node(NodeScope parentScope, Token token) {
+    Node(NodeScope parentScope, Token token) {
         this.parentScope = parentScope;
         if (token != null) {
             this.line = token.line();
@@ -38,19 +38,19 @@ public abstract class Node {
         }
     }
 
-    public    NodeScope       parentScope;
-    public    EnumSet<Flags>  flags = EnumSet.noneOf(Flags.class);
-    protected Class           valueType;
+    NodeScope       parentScope;
+    EnumSet<Flags>  flags = EnumSet.noneOf(Flags.class);
+    Class           valueType;
 
     // source location info, copied from token in constructor
-    protected int line;
-    protected int column;
+    int line;
+    int column;
 
-    public String location() {
+    String location() {
         return "(" + line + ":" + column + ")";
     }
 
-    public enum Flags {
+    enum Flags {
         TYPECHECKED,
         EVALUATED,
         PARENTHESIZED;
@@ -58,8 +58,10 @@ public abstract class Node {
         public static final EnumSet<Flags> ALL = EnumSet.allOf(Flags.class);
     }
 
-    public Class getValueType() { return valueType; };
-    public abstract boolean typecheck(Class hint_type);
-    public abstract boolean serialize(StringBuilder sb);
-    public abstract Object  evaluate(Object hint_value);
+    Class getValueType() { return valueType; };
+    Object getValue() { return null; };
+
+    abstract boolean typecheck(Class hint_type);
+    abstract boolean serialize(StringBuilder sb);
+    abstract Object  evaluate(Object hint_value);
 }
