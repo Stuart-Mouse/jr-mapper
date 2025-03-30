@@ -9,6 +9,8 @@ public class NodeDot extends Node {
     }
 
     Node left, right;
+    Field  resolvedField;
+    Method resolvedMethod;
 
     boolean typecheck(Class hint_type) {
         // NOTE: currently just reaching in and grabbing the left valueType directly.
@@ -30,10 +32,8 @@ public class NodeDot extends Node {
 
         if (right instanceof NodeIdentifier identifier) {
             try {
-                // here we just check that the field exists.
-                // maybe we should store it somewhere though, so that we don't have to do this again in evaluate().
-                Field field = left_type.getDeclaredField(identifier.name);
-                right.valueType = field.getType();
+                resolvedField = left_type.getDeclaredField(identifier.name);
+                right.valueType = resolvedField.getType();
                 right.flags.add(Flags.TYPECHECKED);
             } catch (NoSuchFieldException e) {
                 System.out.println(identifier.location() + ": Error: no such field '" + identifier.name + "' on object of type '" + left.valueType + "'.");
@@ -63,17 +63,15 @@ public class NodeDot extends Node {
     }
 
     Object evaluate(Object hint_value) {
+        // TODO: technically, we should only have to get the value reference here, not actually evaluate the entire left side value.
+        //       but this will be complicated to implement, I think
         var left_value = left.evaluate(null);
         if (left_value == null) return null;
 
         if (right instanceof NodeIdentifier identifier) {
             try {
-                Field field = left.valueType.getField(identifier.name);
-                field.setAccessible(true); // TODO: do we want to do this?
-                return field.get(left_value);
-            } catch (NoSuchFieldException e) {
-                System.out.println(identifier.location() + ": Error: no such field '" + identifier.name + "' on object of type '" + left.valueType + "'.");
-                return false;
+                resolvedField.setAccessible(true); // TODO: do we want to do this?
+                return resolvedField.get(left_value);
             } catch (IllegalAccessException e) {
                 System.out.println(identifier.location() + ": Error: field '" + identifier.name + "' on object of type '" + left.valueType + "' is not accessible.");
                 return false;
