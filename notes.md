@@ -211,9 +211,17 @@ maybe we want to have some resolveddeclaration ptr like we have for dientifiers,
     but there could potentially be some tricky shit with how this would play with constructors or other method calls which can affect the state of an object
     the simple fact that everything in java is object oriented does not really play super nice with the declarative nature of the mappers...
 
-
+whatever we ultimately decide to do for evaluation, th etypechekcing will have to match
+    in the sense that we should (ideally) never typecheck successfully and then fail to evaluate
+    it seems that we should probably just go ahead and separate the external / interal procs for typechecking and evaluation so that
+        if we decide to do the more complex dependency evaluation, we can do so without changing the interface all over the place
+    because already I need to clean up the mess I made with getValueType()
+        need to figure out if there are situations where we would want to call typehceck directly instead of getValueType
+            looking at NodeDeclaration line 23 for example...
+        somewhat tangential, but also need to figure out more idiomatic error handling, will probabyl just hav eto use exxceptions for typechecking and evlauation errors
+            at least then I'll get some stack trace I guess...
     
-
+    
 
 
 

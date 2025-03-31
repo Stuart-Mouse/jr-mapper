@@ -17,14 +17,6 @@ public class NodeIdentifier extends Node {
         return resolvedDeclaration.getValue();
     }
 
-    @Override
-    public Class getValueType() {
-        if (valueType == null) {
-            typecheck(null);
-        }
-        return valueType;
-    }
-
     public boolean typecheck(Class hint_type) {
         resolvedDeclaration = parentScope.resolveDeclaration(name);
         if (resolvedDeclaration == null) {

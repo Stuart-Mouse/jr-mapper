@@ -42,7 +42,6 @@ public class NodeDot extends Node {
         }
         else if (right instanceof NodeMethodCall method_call) {
             // TODO: This logic for this case should actually be handled in NodeMethodCall.typecheck(), which should set some member for the resolved method which we just check here.
-            //       Likewise, it would also be nice if we saved the resolved Field so that we don't have to find it again in evaluate(), but this is not too important at the moment.
             System.out.println("Error: method calls not yet implemented.");
             // if (!method_call.typecheck(left.valueType)); // left.valueType is used as hint_type for method call since method calls need to know the base type, not result type.
             return false;

@@ -58,8 +58,13 @@ public abstract class Node {
         public static final EnumSet<Flags> ALL = EnumSet.allOf(Flags.class);
     }
 
-    Class getValueType() { return valueType; };
-    Object getValue() { return null; };
+    Class getValueType(Class hint_type) {
+        if (valueType == null) {
+            typecheck(hint_type);
+        }
+        return valueType;
+    };
+//    Object getValue() { return evaluate(); };
 
     abstract boolean typecheck(Class hint_type);
     abstract boolean serialize(StringBuilder sb);

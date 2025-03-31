@@ -21,24 +21,9 @@ public class NodeDeclaration extends Node {
         }
 
         if (!valueNode.typecheck(hint_type))  return false;
-        valueType = valueNode.getValueType();
+        valueType = valueNode.getValueType(null);
         flags.add(Flags.TYPECHECKED);
         return true;
-    }
-
-    @Override
-    Object getValue() {
-        return value;
-    }
-
-    // NodeDeclaration overrides getValueType to allow forward-referencing identifiers.
-    // TODO: we will need to implement some checking for circular references here.
-    @Override
-    Class getValueType() {
-        if (valueType == null) {
-            typecheck(null);
-        }
-        return valueType;
     }
 
     boolean serialize(StringBuilder sb) {
