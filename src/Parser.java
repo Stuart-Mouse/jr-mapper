@@ -12,13 +12,16 @@ import java.util.Stack;
 public class Parser {
     public Parser() { }
 
-    public Lexer      lexer             = new Lexer();
+    public Lexer      lexer = new Lexer();
     public NodeObject root;
     public NodeScope  currentScope;
     public MetaData   metaData;
 
     // Used during typechecking to detect dependency cycles between declarations and mappings.
-    public Stack<Node> dependencyChain   = new Stack<Node>();
+    // When declaration nodes are popped from the stack, they'll be pushed onto the end of the evaluationBuffer. 
+    // By this method, we end up with a valid evalaution order that respects dependencies between nodes.
+    public Stack<Node> typecheckingStack = new Stack<Node>();
+    public ArrayList<NodeDeclaration> evaluationBuffer = new ArrayList<NodeDeclaration>();
 
     public static class MetaData {
         public String  name;
@@ -27,14 +30,12 @@ public class Parser {
 
     public boolean setVariable(String name, Object value, Class type) {
         var declaration = root.resolveDeclaration(name);
-        if (declaration == null || declaration.declarationType != null) {
+        if (declaration == null || declaration.declarationType == NodeDeclaration.DeclarationType.VARIABLE) {
             System.out.println("Error: attempt to set variable '" + name + "' invalidly.");
             return false;
         }
-        declaration.declarationType = NodeDeclaration.DeclarationType.EXTERNAL;
         declaration.valueType = type;
-        declaration.value = value;
-//        assert(value instanceof type); // any way to do this?
+        declaration.value     = value;
         return true;
     }
 
@@ -43,20 +44,9 @@ public class Parser {
         return parseExpression(0);
     }
 
-    public NodeMapping getMetaNode() {
-        for (var node: root.declarations) {
-            if (node instanceof NodeMapping mapping) {
-                if (mapping.name.equals("meta")) {
-                    return mapping;
-                }
-            }
-        }
-        return null;
-    }
-
     public Node parseFile(String input) {
         lexer.init(input);
-        root = new NodeObject(null, null);
+        root = new NodeObject(this, null, null);
         currentScope = root;
         if (lexer.expectToken(Token.CLOSE_BRACE) == null) {
             root.declarations = parseDeclarations(Token.CLOSE_BRACE);
@@ -118,14 +108,14 @@ public class Parser {
          switch (token.type()) {
              case Token.DOT: // binary dot, for member access of method calls
                  lexer.getToken(); // eat the dot
-                 var dot = new NodeDot(currentScope, token);
+                 var dot = new NodeDot(this, currentScope, token);
                  dot.left = left;
                  var identifier_token = lexer.getToken();
                  if (identifier_token.type() != Token.IDENTIFIER) {
                      System.out.println(identifier_token.location() + ": Error: expected an identifier after dot.");
                      return null;
                  }
-                 dot.right = new NodeIdentifier(currentScope, identifier_token);
+                 dot.right = new NodeIdentifier(this, currentScope, identifier_token);
                  return dot;
 
              //   case Token.OPEN_PAREN:
@@ -140,7 +130,7 @@ public class Parser {
             var right = parseExpression(op.precedence);
             if (right == null) return null;
 
-            var node = new NodeOperation(currentScope, token, op, left, right);
+            var node = new NodeOperation(this, currentScope, token, op, left, right);
             // if (op.type == Operator.Type.ASSIGNMENT) {
             //     node.flags.add(Node.Flags.MUST_BE_STATEMENT_ROOT);
             // }
@@ -162,15 +152,15 @@ public class Parser {
             var node = parseExpression(op.precedence);
             if (node == null) return null;
 
-            var unary = new NodeOperation(currentScope, token, op, node, null);
+            var unary = new NodeOperation(this, currentScope, token, op, node, null);
         }
 
         switch (token.type()) {
             case Token.IDENTIFIER: {
-                return new NodeIdentifier(currentScope, token);
+                return new NodeIdentifier(this, currentScope, token);
             }
             case Token.NUMBER: {
-                return new NodeNumber(currentScope, token);
+                return new NodeNumber(this, currentScope, token);
             }
             case Token.OPEN_PAREN: {
                 var node = parseExpression(0); // reset min_prec since we are in parens
@@ -185,13 +175,13 @@ public class Parser {
                 return node;
             }
             case Token.STRING: {
-                return new NodeString(currentScope, token);
+                return new NodeString(this, currentScope, token);
             }
 //            case Token.DOT: {
 //                return new NodeDot();
 //            }
             case Token.OPEN_BRACE: {
-                var node = new NodeObject(currentScope, token);
+                var node = new NodeObject(this, currentScope, token);
                 currentScope = node;
                 if (lexer.expectToken(Token.CLOSE_BRACE) == null) {
                     // TODO: if we allow variable declarations in objects, we should probably inline parseDeclarations here so that we can put variable decls and mapping fields into separate arrays.
@@ -205,26 +195,26 @@ public class Parser {
                 currentScope = node.parentScope;
                 return node;
             }
-            case Token.OPEN_BRACKET: {
-                var node = new NodeArray(currentScope, token);
-                currentScope = node;
-                if (lexer.expectToken(Token.CLOSE_BRACKET) != null) {
-                    node.valueNodes = parseCommaSeparatedExpressions();
-                    if (node.valueNodes == null) {
-                        System.out.println("Error while trying to parse inner declarations of NodeObject.");
-                        currentScope = node.parentScope;
-                        return null;
-                    }
-                    var close_bracket = lexer.getToken();
-                    if (close_bracket.type() != Token.CLOSE_BRACKET) {
-                        System.out.println("Error: expected closing bracket at " + close_bracket.location() + " to end array at " + node.location());
-                        currentScope = node.parentScope;
-                        return null;
-                    }
-                }
-                currentScope = node.parentScope;
-                return node;
-            }
+            // case Token.OPEN_BRACKET: {
+            //     var node = new NodeArray(currentScope, token);
+            //     currentScope = node;
+            //     if (lexer.expectToken(Token.CLOSE_BRACKET) != null) {
+            //         node.valueNodes = parseCommaSeparatedExpressions();
+            //         if (node.valueNodes == null) {
+            //             System.out.println("Error while trying to parse inner declarations of NodeObject.");
+            //             currentScope = node.parentScope;
+            //             return null;
+            //         }
+            //         var close_bracket = lexer.getToken();
+            //         if (close_bracket.type() != Token.CLOSE_BRACKET) {
+            //             System.out.println("Error: expected closing bracket at " + close_bracket.location() + " to end array at " + node.location());
+            //             currentScope = node.parentScope;
+            //             return null;
+            //         }
+            //     }
+            //     currentScope = node.parentScope;
+            //     return node;
+            // }
         }
 
         System.out.println("parseLeaf returning null");
@@ -240,74 +230,72 @@ public class Parser {
         // declaration must begin with some type identifier  or 'var'
         // OR, the declaration is a NodeMapping, in which case the first token should be an identifier that resolves to something in the current output object(s) scope
         // so I guess we just do parseExpression here and the first thing better be some keyword or identifier
-        NodeDeclaration node;
-
-        Token token = lexer.getToken();
-        switch (token.type()) {
+        NodeDeclaration.DeclarationType decl_type = null;
+        
+        Token keyword = lexer.peekToken();
+        switch (keyword.type()) {
             case Token.DECL_VAR:
-                var var_token = token;
+                decl_type = NodeDeclaration.DeclarationType.VARIABLE;
+                lexer.getToken();
+                break;
 
-                token = lexer.getToken();
-                if (token.type() != Token.IDENTIFIER) {
-                    System.out.println("Error: expected identifier after keyword 'var' in variable declaration at " + token.location() + ".");
-                    return null;
-                }
-                Token identifier = token;
+            case Token.DECL_INPUT:
+                decl_type = NodeDeclaration.DeclarationType.INPUT;
+                lexer.getToken();
+                break;
 
-                token = lexer.getToken();
-                if (token.type() != Token.COLON) {
-                    System.out.println("Error: expected colon after identifier in variable declaration at " + token.location() + ".");
-                    return null;
-                }
-
-                var declaration = new NodeDeclaration(currentScope, var_token, identifier.text());
-                declaration.declarationType = NodeDeclaration.DeclarationType.INTERNAL;
-
-                var other = currentScope.addDeclaration(declaration);
-                if (other != null) {
-                    System.out.println(identifier.location() + ": Error: redeclaration of '" + identifier.text() + "'. Previously declared at " + other.location() + ".");
-                    return null;
-                }
-
-                declaration.valueNode = parseExpression(0);
-                if (declaration.valueNode == null) {
-                    System.out.println("Error: failed while trying to parse value expression in variable declaration at " + token.location() + ".");
-                    return null;
-                }
-
-                node = declaration;
+            case Token.DECL_OUTPUT:
+                decl_type = NodeDeclaration.DeclarationType.OUTPUT;
+                lexer.getToken();
                 break;
 
             case Token.IDENTIFIER:
-                identifier = token;
-
-                // NOTE: later we may allow more complex syntax here before then colon
-                //       for example, range-based initialization on array types
-                token = lexer.getToken();
-                if (token.type() != Token.COLON) {
-                    System.out.println("Error: expected colon after identifier in mapping declaration at " + token.location() + ".");
-                    return null;
-                }
-
-                NodeMapping mapping = new NodeMapping(currentScope, token, identifier.text());
-
-                mapping.valueNode = parseExpression(0);
-                if (mapping.valueNode == null) {
-                    System.out.println("Error: failed while trying to parse value expression of mapping at " + token.location() + ".");
-                    return null;
-                }
-
-                node = mapping;
+                decl_type = NodeDeclaration.DeclarationType.FIELD;
                 break;
-
+                
             default:
-                System.out.println(token.location() + ": Error: Unexpected token '" + token.text() + "'.");
+                System.out.println(keyword.location() + ": Error: Unexpected token '" + keyword.text() + "'.");
                 return null;
+        }
+        
+        Token identifier = lexer.getToken();
+        if (identifier.type() != Token.IDENTIFIER) {
+            System.out.println("Error: expected identifier after keyword '" + keyword.text() + "' in declaration at " + keyword.location() + ".");
+            return null;
+        }
+
+        var declaration = new NodeDeclaration(this, currentScope, keyword, identifier.text(), decl_type);
+
+        var other = currentScope.addDeclaration(declaration);
+        if (other != null) {
+            System.out.println(identifier.location() + ": Error: redeclaration of '" + identifier.text() + "'. Previously declared at " + other.location() + ".");
+            return null;
+        }
+
+        // early return on INPUT declaration since these do not accept a value expression
+        if (declaration.declarationType == NodeDeclaration.DeclarationType.INPUT) {
+            if (lexer.expectToken(Token.COMMA) == null) {
+                System.out.println(declaration.location() + ": Error: expected comma after input declaration. (Input declarations do not accept a value expression, as they receive their values externally and are not modifiable.)");
+                return null;
+            }
+            return declaration;
+        }
+
+        Token colon = lexer.getToken();
+        if (colon.type() != Token.COLON) {
+            System.out.println("Error: expected colon after identifier in variable declaration at " + colon.location() + ".");
+            return null;
+        }
+
+        declaration.valueNode = parseExpression(0);
+        if (declaration.valueNode == null) {
+            System.out.println("Error: failed while trying to parse value expression in declaration at " + declaration.location() + ".");
+            return null;
         }
 
         // comma after declaration value expression is optional if the expression was an object or array
         // otherwise, we need to see either the comma or end of scope
-        if (node.valueNode instanceof NodeObject || node.valueNode instanceof NodeArray) {
+        if (declaration.valueNode instanceof NodeObject) {
             lexer.expectToken(Token.COMMA);
         } else {
             var next_token = lexer.peekToken();
@@ -319,7 +307,8 @@ public class Parser {
                     return null;
             }
         }
-        return node;
+
+        return declaration;
     }
 
     private ArrayList<NodeDeclaration> parseDeclarations(int break_token_type) {
@@ -336,14 +325,14 @@ public class Parser {
 
     public boolean typecheck() {
         for (var field_node: root.declarations) {
-            if (!field_node.typecheck(null)) return false;
+            field_node.typecheck(null);
         }
         return true;
     }
 
     public boolean evaluate() {
         for (var field_node: root.declarations) {
-            if (field_node.evaluate(null) == null) return false;
+            field_node.evaluate(null);
         }
         return true;
     }

@@ -1,15 +1,4 @@
 /*
-    All node types must implement the basic methods:
-        typecheck
-        serialize
-        evaluate
-
-    We will probably remove evaluate or stub it out for the more complex node types that will come later,
-    since I don't currently know of a way to do dyncall-like dynamic function calls in Java.
-        Nevermind, seems like it should be relatively trivial:
-            https://stackoverflow.com/questions/3050967/java-dynamic-function-calling
-    But, for the time being, it is useful to have an evaluate method on nodes so that we can test the basics in the repl.
-
     Serialization should work without nodes needing to be typechecked.
     The entire AST as produced by the Parser is initially untyped, and then all types are resolved in a second pass.
 
@@ -18,26 +7,23 @@
     Typechecking procedures should only return false if they individually failed to typecheck properly, that is, if the node's valueType was not set.
     If typecheck() returns true, it is understood that the node has a valid valueType and has set its .TYPECHECKED flag.
     In general, it is fine for a node not to match the provided hint_type, and then it is up the caller to determine if the actual valueType on the node is acceptable.
-
-
-    I will probably later also add a method for declaration resolution on this base Node type,
-        so that we can always recurse up any node type.
-    Then again, this may not play nice when we want to check scopes, so perhaps we will have a NodeScope for that purpose,
-        and parent will always have to point to a NodeScope.
 */
 
 
 import java.util.EnumSet;
+import java.util.Stack;
 
 public abstract class Node {
-    Node(NodeScope parentScope, Token token) {
-        this.parentScope = parentScope;
+    Node(Parser owningParser, NodeScope parentScope, Token token) {
+        this.owningParser = owningParser;
+        this.parentScope  = parentScope;
         if (token != null) {
             this.line = token.line();
             this.column = token.column();
         }
     }
 
+    Parser          owningParser;
     NodeScope       parentScope;
     EnumSet<Flags>  flags = EnumSet.noneOf(Flags.class);
     Class           valueType;
@@ -57,16 +43,74 @@ public abstract class Node {
 
         public static final EnumSet<Flags> ALL = EnumSet.allOf(Flags.class);
     }
+    
+    boolean isTypechecked()   { return flags.contains(Flags.TYPECHECKED); }
+    boolean isParenthesized() { return flags.contains(Flags.PARENTHESIZED); }
+    boolean isEvaluated()     { return flags.contains(Flags.EVALUATED); }
 
-    Class getValueType(Class hint_type) {
-        if (valueType == null) {
-            typecheck(hint_type);
+    boolean setTypechecked()   { return flags.add(Flags.TYPECHECKED); }
+    boolean setParenthesized() { return flags.add(Flags.PARENTHESIZED); }
+    boolean setEvaluated()     { return flags.add(Flags.EVALUATED); }
+
+    final void pushDependency() {
+        var stack = owningParser.typecheckingStack;
+        if (stack.contains(this)) {
+            var sb = new StringBuilder();
+            sb.append("Circular dependency detected while typechecking:\n");
+            for (var node: stack) {
+                sb.append("\t").append(node.location()).append("\n");
+            }
+            throw new RuntimeException(sb.toString());
         }
+        stack.push(this);
+    }
+    
+    final void popDependency() {
+        // This assert makes sure that we don't forget to call pop for each matching push.
+        assert(owningParser.typecheckingStack.pop() == this);
+        if (this instanceof NodeDeclaration declaration) {
+            owningParser.evaluationBuffer.add(declaration);
+        }
+    }
+    
+    final Class typecheck(Class hint_type) {
+        if (isTypechecked()) return valueType;
+        pushDependency();
+        
+        valueType = _typecheck(hint_type);
+        assert(valueType != null);
+        
+        popDependency();
+        setTypechecked();
         return valueType;
-    };
-//    Object getValue() { return evaluate(); };
+    }
+    
+    final void serialize(StringBuilder sb) {
+        if (isParenthesized()) sb.append("(");
+        _serialize(sb);
+        if (isParenthesized()) sb.append(")");
+    }
+    
+    final Object evaluate(Object hint_value) {
+        assert(isTypechecked());
+        var result = _evaluate(hint_value);
+        setEvaluated();
+        return result;
+    }
 
-    abstract boolean typecheck(Class hint_type);
-    abstract boolean serialize(StringBuilder sb);
-    abstract Object  evaluate(Object hint_value);
+    boolean isAssignableFrom(Class type) {
+        return valueType.isAssignableFrom(type) || NodeNumber.areMatchingTypes(valueType, type);
+    }
+    
+    // specific case must be implemented for each subclass
+    abstract Class   _typecheck(Class hint_type);
+    abstract void    _serialize(StringBuilder sb);
+    abstract Object  _evaluate(Object hint_value);
+    
+    // overload provided for convenience when serializing root node of some expression
+    public final String toString() {
+        var sb = new StringBuilder();
+        serialize(sb);
+        return sb.toString();
+    }
 }

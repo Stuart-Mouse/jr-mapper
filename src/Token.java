@@ -52,5 +52,7 @@ public record Token(int type, int line, int column, String text) {
     public static final int SPREAD                    = 256 + 108;  // ..
 
     // keywords
-    public static final int DECL_VAR = 256 + 201;
+    public static final int DECL_VAR    = 256 + 201;
+    public static final int DECL_INPUT  = 256 + 202;
+    public static final int DECL_OUTPUT = 256 + 203;
 }

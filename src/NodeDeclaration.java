@@ -1,43 +1,72 @@
+/*
+    TODO: we can probably make subclasses for each declaration type instead of using an enum, but this was faster to implement for the mean time.
+*/
+
+import java.lang.reflect.Field;
 
 public class NodeDeclaration extends Node {
-    NodeDeclaration(NodeScope parentScope, Token token, String name) {
-        super(parentScope, token);
+    NodeDeclaration(Parser owningParser, NodeScope parentScope, Token token, String name, DeclarationType declarationType) {
+        super(owningParser, parentScope, token);
         this.name = name;
+        this.declarationType = declarationType;
     }
-
+    
     String name;
     Node   valueNode;
     Object value;
-
-    // DeclarationType is used only by this class atm, not by NodeMapping. Some refactoring will probably be necessary later...
-    // this does not get set in constructor, but it does need to be resolved during typechecking at the latest
+    
+    // only used if the node is a field within an enclosing object
+    Field resolvedField;
+    
     DeclarationType declarationType;
-    public enum DeclarationType { INTERNAL, EXTERNAL };
+    public enum DeclarationType { FIELD, VARIABLE, INPUT, OUTPUT };
 
-    boolean typecheck(Class hint_type) {
-        if (declarationType == null) {
-            System.out.println(location() + ": Error: declarationType was null in typecheck().");
-            return false;
+    Class _typecheck(Class hint_type) {
+        // For now, we assume that our parsing is correct and all INPUT and OUTPUT declarations will have their valueType pre-set.
+        // For VARIABLE declarations, the valueType is inferred from the valueNode.
+        switch (declarationType) {
+            case DeclarationType.INPUT:
+            case DeclarationType.OUTPUT:
+                hint_type = valueType;
+                break;
+
+            case DeclarationType.FIELD:
+                valueType = hint_type;
+                break;
         }
+        var received_type = valueNode.typecheck(hint_type);
 
-        if (!valueNode.typecheck(hint_type))  return false;
-        valueType = valueNode.getValueType(null);
-        flags.add(Flags.TYPECHECKED);
-        return true;
+        // NOTE: valueType will only be null here in the VARIABLE case
+        if (valueType == null) {
+            return received_type;
+        }
+        if (!isAssignableFrom(received_type)) {
+            throw new RuntimeException("Error: mismatched types in declaration. Type " + valueType + " is not assignable from " + valueNode.valueType);
+        }
+        return valueType;
     }
-
-    boolean serialize(StringBuilder sb) {
-        sb.append("var ").append(name).append(": ");
+    
+    void _serialize(StringBuilder sb) {
+        switch (declarationType) {
+            case DeclarationType.VARIABLE:  sb.append("var ");    break;
+            case DeclarationType.INPUT:     sb.append("input ");  break;
+            case DeclarationType.OUTPUT:    sb.append("output "); break;
+        }
+        sb.append(name).append(": ");
         valueNode.serialize(sb);
-        return true;
     }
-
-    Object evaluate(Object hint_value) {
-        if (flags.contains(Flags.EVALUATED)) return value;
-        if (value != null) hint_value = value;  // TODO: is this a bad hack? we have to do this in order to use the value that was set on a mapping node manually by setVariable
-        else value = hint_value;
-        value = valueNode.evaluate(hint_value);
-        flags.add(Flags.EVALUATED);
+    
+    Object _evaluate(Object hint_value) {
+        if (!isEvaluated()) {
+            switch (declarationType) {
+                case DeclarationType.INPUT:
+                case DeclarationType.OUTPUT:
+                    hint_value = value;
+                    break;
+            }
+            value = valueNode.evaluate(hint_value);
+            setEvaluated();
+        }
         return value;
     }
 }

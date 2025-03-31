@@ -1,6 +1,6 @@
 public class NodeNumber extends Node {
-    public NodeNumber(NodeScope parent, Token token) {
-        super(parent, token);
+    NodeNumber(Parser owningParser, NodeScope parent, Token token) {
+        super(owningParser, parent, token);
         // NOTE: for now, we only store as Double or Long, based on whether the source text contained a '.'
         //       we also tentatively set the valueType, though this may be altered during typechecking to coerce to a different number type.
         // TODO: emit a warning if the number textually represented cannot be actually stored in either a Double or Long without loss of data.
@@ -15,12 +15,12 @@ public class NodeNumber extends Node {
 
     // need to be able to store either an integer or float losslessly depending on what was lexed
     // but also need to be able to coerce to whatever other type is needed when we typecheck the node
-    public Number value;
+    Number value;
 
     // TODO: we could use better checking here to detect narrowing conversions and emit warnings
     //       it may actually be wiser to just move the dynamic number casts out to their own utility function,
     //       similar to how I do it in the data packer's remap_data functions.
-    public boolean typecheck(Class hint_type) {
+    Class _typecheck(Class hint_type) {
         if (valueType == Double.class && !isFloaty(hint_type)) {
             System.out.println(this.location() + ": Warning: potential loss of information in conversion from Double to '" + hint_type + "'.");
         }
@@ -29,62 +29,67 @@ public class NodeNumber extends Node {
         }
 
         // we seemingly cannot use a switch here on the type, not sure why Java doesn't like that...
-        if (hint_type == Double.class || hint_type == double.class) {
+        if (isDouble(hint_type)) {
             value     = value.doubleValue();
             valueType = Double.class;
         }
-        else if (hint_type == Float.class || hint_type == float.class) {
+        else if (isFloat(hint_type)) {
             value     = value.floatValue();
             valueType = Float.class;
         }
-        else if (hint_type == Long.class || hint_type == long.class) {
+        else if (isLong(hint_type)) {
             value     = value.longValue();
             valueType = Long.class;
         }
-        else if (hint_type == Integer.class || hint_type == int.class) {
+        else if (isInteger(hint_type)) {
             value     = value.intValue();
             valueType = Integer.class;
         }
-        else if (hint_type == Short.class || hint_type == short.class) {
+        else if (isShort(hint_type)) {
             value     = value.shortValue();
             valueType = Short.class;
         }
-        else if (hint_type == Byte.class || hint_type == byte.class) {
+        else if (isByte(hint_type)) {
             value     = value.byteValue();
             valueType = Byte.class;
         }
 
-        flags.add(Flags.TYPECHECKED);
-        return true;
+        return valueType;
     }
 
-    public boolean serialize(StringBuilder sb) {
-        if (flags.contains(Flags.PARENTHESIZED)) sb.append("(");
+    void _serialize(StringBuilder sb) {
         sb.append(value.toString());
-        if (flags.contains(Flags.PARENTHESIZED)) sb.append(")");
-        return true;
     }
 
-    public Object evaluate(Object hint_value) {
-        assert(flags.contains(Flags.TYPECHECKED));
+    Object _evaluate(Object hint_value) {
         return value;
     }
 
-
-    private boolean isFloaty(Class type) {
-        return type == Double.class
-            || type == Float.class
-            || type == double.class
-            || type == float.class;
+    static boolean isNumericType(Class type) {
+        return isFloaty(type) || isIntegeresque(type) || type.equals(Number.class);
     }
-    private boolean isIntegeresque(Class type) {
-        return type == Integer.class
-            || type == Short.class
-            || type == Long.class
-            || type == Byte.class
-            || type == int.class
-            || type == short.class
-            || type == long.class
-            || type == byte.class;
+
+    static boolean isFloaty(Class type) {
+        return isDouble(type) || isFloat(type);
+    }
+    
+    static boolean isIntegeresque(Class type) {
+        return isLong(type) || isInteger(type) || isShort(type) || isByte(type);
+    }
+    
+    static boolean isDouble  (Class type) { return type.equals( Double.class) || type.equals(double.class); }
+    static boolean isFloat   (Class type) { return type.equals(  Float.class) || type.equals( float.class); }
+    static boolean isLong    (Class type) { return type.equals(   Long.class) || type.equals(  long.class); }
+    static boolean isInteger (Class type) { return type.equals(Integer.class) || type.equals(   int.class); }
+    static boolean isShort   (Class type) { return type.equals(  Short.class) || type.equals( short.class); }
+    static boolean isByte    (Class type) { return type.equals(   Byte.class) || type.equals(  byte.class); }
+    
+    static boolean areMatchingTypes(Class type_a, Class type_b) {
+        return isDouble (type_a) && isDouble (type_b) || 
+               isFloat  (type_a) && isFloat  (type_b) || 
+               isLong   (type_a) && isLong   (type_b) || 
+               isInteger(type_a) && isInteger(type_b) || 
+               isShort  (type_a) && isShort  (type_b) || 
+               isByte   (type_a) && isByte   (type_b);
     }
 }

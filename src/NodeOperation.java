@@ -1,8 +1,8 @@
 import java.util.EnumSet;
 
 public class NodeOperation extends Node {
-    public NodeOperation(NodeScope parent, Token token, Operator operator, Node left, Node right) {
-        super(parent, token);
+    NodeOperation(Parser owningParser, NodeScope parent, Token token, Operator operator, Node left, Node right) {
+        super(owningParser, parent, token);
         this.operator = operator;
         this.left     = left;
         this.right    = right;
@@ -12,53 +12,28 @@ public class NodeOperation extends Node {
     Node      left;
     Node      right;
 
-    public boolean typecheck(Class hint_type) {
+    Class _typecheck(Class hint_type) {
         // TODO: unary operations
 
-        // NOTE: commented out the below because realistically we will always have a type hint provided.
-//        Class  left_type =  left.getValueType();
-//        Class right_type = right.getValueType();
-//
-//        if ( left_type != null && Number.class.isAssignableFrom( left_type)
-//         && right_type != null && Number.class.isAssignableFrom(right_type)) {
-//            // TODO: pre-emptively get wider of two Number types and set as hint_type in below calls to typecheck()
-//        }
+        Class  left_type =  left.typecheck(hint_type);
+        Class right_type = right.typecheck(hint_type);
 
-        if (! left.typecheck(hint_type)) {
-            System.out.println(left.location() + ": Error: failed to typecheck left side of binary operation.");
-            return false;
-        }
-        if (!right.typecheck(hint_type)) {
-            System.out.println(right.location() + ": Error: failed to typecheck right side of binary operation.");
-            return false;
-        }
-
-        Class  left_type =  left.getValueType();
-        Class right_type = right.getValueType();
-
-        if (left_type != right_type) {
+        if (!left_type.equals(right_type)) {
             // TODO: if left and right types don't match, we can try to coerce to the wider of the two types.
-            System.out.println("Error: left and right types of operation do not match: " + left_type + " vs " + right_type + ".");
-            return false;
+            throw new RuntimeException(location() + ": Error: left and right types of operation do not match: " + left_type + " vs " + right_type + ".");
         }
 
         // TODO: verify that we can always assume that an operation will have the same type as its operands.
-        valueType = left_type;
-
-        flags.add(Flags.TYPECHECKED);
-        return true;
+        return left_type;
     }
 
-    public boolean serialize(StringBuilder sb) {
-        if (flags.contains(Flags.PARENTHESIZED)) sb.append("(");
+    void _serialize(StringBuilder sb) {
         left.serialize(sb);
         sb.append(" " + operator.printName + " ");
         right.serialize(sb);
-        if (flags.contains(Flags.PARENTHESIZED)) sb.append(")");
-        return true;
     }
 
-    public Object evaluate(Object hint_value) {
+    Object _evaluate(Object hint_value) {
         var lv =  left.evaluate(null);
         var rv = right.evaluate(null);
 

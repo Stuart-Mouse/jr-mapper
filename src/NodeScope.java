@@ -6,21 +6,21 @@
 
 import java.util.ArrayList;
 
-public class NodeScope extends Node {
-    public NodeScope(NodeScope parent, Token token) {
-        super(parent, token);
+public abstract class NodeScope extends Node {
+    NodeScope(Parser owningParser, NodeScope parent, Token token) {
+        super(owningParser, parent, token);
     }
 
-    public ArrayList<NodeDeclaration> declarations = new ArrayList<NodeDeclaration>();
+    ArrayList<NodeDeclaration> declarations = new ArrayList<NodeDeclaration>();
 
     // returns existing declaration if identifier is already declared in this scope
-    public NodeDeclaration addDeclaration(NodeDeclaration decl) {
+    NodeDeclaration addDeclaration(NodeDeclaration decl) {
         var other = resolveDeclaration(decl.name);
         if (other != null) return other;
         declarations.add(decl);
         return null;
     }
-    public NodeDeclaration resolveDeclaration(String identifier) {
+    NodeDeclaration resolveDeclaration(String identifier) {
         for (var decl: declarations) {
             if (decl.name.equals(identifier)) {
                 return decl;
@@ -29,18 +29,6 @@ public class NodeScope extends Node {
         if (parentScope != null) {
             return parentScope.resolveDeclaration(identifier);
         }
-        return null;
-    }
-
-    // dummy implementations for these methods until I figure out something better to do
-    public boolean typecheck(Class hint_type) {
-        flags.add(Flags.TYPECHECKED);
-        return true;
-    }
-    public boolean serialize(StringBuilder sb) {
-        return true;
-    }
-    public Object evaluate(Object hint_value) {
         return null;
     }
 }

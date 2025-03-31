@@ -8,8 +8,6 @@ import java.lang.StringBuilder;
 public class Main {
     public static void main(String[] args) {
 
-        // TODO: test objects and arrays
-        //       cannot yet typecheck, so just parse and serialize
         try {
             Path filePath = Paths.get("test.rmap");
             String input = Files.readString(filePath);
@@ -19,29 +17,21 @@ public class Main {
             if (root == null) {
                 throw new RuntimeException("Failed to parse file!");
             }
-//            var meta = parser.getMetaNode();
-//            if (!meta.typecheck(Parser.MetaData.class)) {
-//                throw new RuntimeException("Failed to typecheck file metadata!");
-//            }
+
             parser.metaData = new Parser.MetaData();
             parser.setVariable("meta", parser.metaData, Parser.MetaData.class);
 
             var meta2 = new Parser.MetaData();
             parser.setVariable("meta2", meta2, Parser.MetaData.class);
-//            parser.metaData = (Parser.MetaData)(meta.evaluate(parser.metaData));
-//            if (parser.metaData == null) {
-//                throw new RuntimeException("Failed to evaluate file metadata!");
-//            }
+
             if (!parser.typecheck()) {
-                throw new RuntimeException("Failed to typecheck file!");
+                throw new RuntimeException("Error: failed to typecheck file.");
             }
             if (!parser.evaluate()) {
-                throw new RuntimeException("Failed to evaluate file!");
+                throw new RuntimeException("Error: failed to evaluate file.");
             }
 
-            var sb = new StringBuilder();
-            root.serialize(sb);
-            System.out.println(sb.toString());
+            System.out.println(root.toString());
 
             System.out.println("parser.metaData.name: " + parser.metaData.name);
             System.out.println("parser.metaData.id: " + parser.metaData.id);
@@ -71,7 +61,8 @@ public class Main {
                     System.out.println("Failed to parse expression!");
                     continue;
                 }
-                if (!root.typecheck(null)) {
+                try { root.typecheck(null); }
+                catch (Exception e) {
                     System.out.println("Failed to typecheck expression!");
                     continue;
                 }
@@ -81,8 +72,9 @@ public class Main {
                     System.out.println("Failed to parse declaration!");
                     continue;
                 }
-                if (!root.typecheck(null)) {
-                    System.out.println("Failed to typecheck declaration!");
+                try { root.typecheck(null); }
+                catch (Exception e) {
+                    System.out.println("Failed to typecheck expression!");
                     continue;
                 }
             }

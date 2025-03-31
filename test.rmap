@@ -1,9 +1,9 @@
-meta: {
+output meta: {
     name: "Mapper Test (" + filename + ")",
     id: meta2.id,
 }
 
-meta2: {
+output meta2: {
     name: "rmap",
     id: 3535,
 }

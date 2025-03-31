@@ -166,7 +166,9 @@ public class Lexer {
             // handle if identifier is actually a reserved word
             String identifier = sourceText.substring(start, end);
             switch (identifier) {
-                case "var": return new Token(Token.DECL_VAR, line, column, identifier);
+                case "var":    return new Token(Token.DECL_VAR,    line, column, identifier);
+                case "input":  return new Token(Token.DECL_INPUT,  line, column, identifier);
+                case "output": return new Token(Token.DECL_OUTPUT, line, column, identifier);
             }
 
             return new Token(Token.IDENTIFIER, line, column, identifier);

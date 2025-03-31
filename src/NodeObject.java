@@ -7,34 +7,32 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 public class NodeObject extends NodeScope {
-    public NodeObject(NodeScope parent, Token token) {
-        super(parent, token);
+    NodeObject(Parser owningParser, NodeScope parent, Token token) {
+        super(owningParser, parent, token);
     }
 
-    public boolean typecheck(Class hint_type) {
-        // A type hint is required for objects at this time.
-        // This type hint should be provided by the output object to which the NodeObject is bound.
-        // In the future, we may also support an explicit type identifier using the `Type.{}` syntax or similar.
-        if (hint_type == null) return false;
+    Class _typecheck(Class hint_type) {
+        if (hint_type == null) {
+            throw new RuntimeException(location() + ": Error: no hint type provided to NodeObject.typecheck().");
+        }
+        // We go ahead and manually set valueType here since we refer to it below.
         valueType = hint_type;
 
         for (var field_node: declarations) {
-            Class field_hint_type = null;
-            if (field_node instanceof NodeMapping mapping) {
-                try {
-                    field_hint_type = valueType.getDeclaredField(mapping.name).getType();
-                } catch (NoSuchFieldException e) {
-                    System.out.println(mapping.location() + ": Warning: no such field '" + mapping.name + "' on object of type " + valueType + ".");
-                }
+            // NOTE: all field nodes in an object will necessarily match the declaration type of the parent object
+            //       input declarations cannot have a valueNode, so all fields here must either be a variable or output declaration
+            try {
+                field_node.resolvedField = valueType.getDeclaredField(field_node.name);
+                field_node.typecheck(field_node.resolvedField.getType());
+                // TODO: not yet sure if we need to check the result of the above typechecking call.
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException(field_node.location() + ": Error: no such field '" + field_node.name + "' on object of type " + valueType + ".");
             }
-            if (!field_node.typecheck(field_hint_type)) return false;
         }
-
-        flags.add(Flags.TYPECHECKED);
-        return true;
+        return valueType;
     }
 
-    public boolean serialize(StringBuilder sb) {
+    void _serialize(StringBuilder sb) {
         sb.append("{\n");
         if (declarations != null) {
             for (var decl: declarations) {
@@ -43,15 +41,16 @@ public class NodeObject extends NodeScope {
             }
         }
         sb.append("}");
-        return true;
     }
 
-    public Object evaluate(Object hint_value) {
-        assert(flags.contains(Flags.TYPECHECKED));
-//        assert(hint_value.getClass().equals(valueType));
-        Object value = hint_value;
+    Object _evaluate(Object hint_value) {
+        // NOTE: for now we are asserting that a NodeObject is not evaluated more than once,
+        //       since only Identifiers and Declarations should ever be executed multiple times.
+        assert(!isEvaluated()); 
+        setEvaluated();
 
         // only need to initialize new object if none was provided
+        Object value = hint_value;
         if (value == null) {
             try {
                 value = valueType.getDeclaredConstructor().newInstance();
@@ -65,19 +64,13 @@ public class NodeObject extends NodeScope {
         }
 
         for (var decl: declarations) {
-            decl.evaluate(null);
-            if (decl instanceof NodeMapping mapping) {
-                try {
-                    Field field = valueType.getDeclaredField(mapping.name);
-                    assert(field.getType().equals(mapping.valueType));
-                    field.setAccessible(true);
-                    field.set(value, mapping.value);
-                } catch (NoSuchFieldException e) {
-                    System.out.println(mapping.location() + ": Error: no such field '" + mapping.name + "' on object of type " + valueType + ".");
-                } catch (IllegalAccessException e) {
-                    System.out.println(mapping.location() + ": Error: field '" + mapping.name + "' on object of type '" + valueType + "' is not accessible.");
-                    return false;
-                }
+            try {
+                var decl_value = decl.evaluate(null);
+                decl.resolvedField.setAccessible(true);
+                decl.resolvedField.set(value, decl_value);
+            } catch (IllegalAccessException e) {
+                System.out.println(decl.location() + ": Error: field '" + decl.name + "' on object of type '" + valueType + "' is not accessible.");
+                return false;
             }
         }
 
