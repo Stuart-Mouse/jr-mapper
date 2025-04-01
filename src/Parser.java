@@ -20,8 +20,8 @@ public class Parser {
     // Used during typechecking to detect dependency cycles between declarations and mappings.
     // When declaration nodes are popped from the stack, they'll be pushed onto the end of the evaluationBuffer. 
     // By this method, we end up with a valid evalaution order that respects dependencies between nodes.
-    public Stack<Node> typecheckingStack = new Stack<Node>();
-    public ArrayList<NodeDeclaration> evaluationBuffer = new ArrayList<NodeDeclaration>();
+    public Stack<Node> typecheckingStack = new Stack<>();
+    public ArrayList<NodeDeclaration> evaluationBuffer = new ArrayList<>();
 
     public static class MetaData {
         public String  name;
@@ -156,13 +156,13 @@ public class Parser {
         }
 
         switch (token.type()) {
-            case Token.IDENTIFIER: {
+            case Token.IDENTIFIER -> {
                 return new NodeIdentifier(this, currentScope, token);
             }
-            case Token.NUMBER: {
+            case Token.NUMBER -> {
                 return new NodeNumber(this, currentScope, token);
             }
-            case Token.OPEN_PAREN: {
+            case Token.OPEN_PAREN -> {
                 var node = parseExpression(0); // reset min_prec since we are in parens
                 if (node == null) return null;
                 node.flags.add(Node.Flags.PARENTHESIZED);
@@ -174,13 +174,13 @@ public class Parser {
                 }
                 return node;
             }
-            case Token.STRING: {
+            case Token.STRING -> {
                 return new NodeString(this, currentScope, token);
             }
 //            case Token.DOT: {
 //                return new NodeDot();
 //            }
-            case Token.OPEN_BRACE: {
+            case Token.OPEN_BRACE -> {
                 var node = new NodeObject(this, currentScope, token);
                 currentScope = node;
                 if (lexer.expectToken(Token.CLOSE_BRACE) == null) {
@@ -195,7 +195,7 @@ public class Parser {
                 currentScope = node.parentScope;
                 return node;
             }
-            // case Token.OPEN_BRACKET: {
+            // case Token.OPEN_BRACKET -> {
             //     var node = new NodeArray(currentScope, token);
             //     currentScope = node;
             //     if (lexer.expectToken(Token.CLOSE_BRACKET) != null) {
@@ -286,13 +286,22 @@ public class Parser {
             System.out.println("Error: expected colon after identifier in variable declaration at " + colon.location() + ".");
             return null;
         }
-
+        
+        // NOTE: this can be null, in which case we just try to infer the type when typechecking
+        declaration.constructorNode = parseExpression(0);
+        
+        Token equal_sign = lexer.getToken();
+        if (equal_sign.type() != Token.EQUALS) {
+            System.out.println("Error: expected equal sign after colon in variable declaration at " + equal_sign.location() + ".");
+            return null;
+        }
+        
         declaration.valueNode = parseExpression(0);
         if (declaration.valueNode == null) {
             System.out.println("Error: failed while trying to parse value expression in declaration at " + declaration.location() + ".");
             return null;
         }
-
+        
         // comma after declaration value expression is optional if the expression was an object or array
         // otherwise, we need to see either the comma or end of scope
         if (declaration.valueNode instanceof NodeObject) {
@@ -331,8 +340,8 @@ public class Parser {
     }
 
     public boolean evaluate() {
-        for (var field_node: root.declarations) {
-            field_node.evaluate(null);
+        for (var decl: evaluationBuffer) {
+            decl.evaluate(null);
         }
         return true;
     }

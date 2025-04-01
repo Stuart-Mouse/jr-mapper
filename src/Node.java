@@ -11,7 +11,6 @@
 
 
 import java.util.EnumSet;
-import java.util.Stack;
 
 public abstract class Node {
     Node(Parser owningParser, NodeScope parentScope, Token token) {

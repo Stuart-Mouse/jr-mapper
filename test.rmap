@@ -1,11 +1,11 @@
-output meta: {
-    name: "Mapper Test (" + filename + ")",
-    id: meta2.id,
+output meta := {
+    name := "Mapper Test (" + filename + ")",
+    id   := meta2.id,
 }
 
-output meta2: {
-    name: "rmap",
-    id: 3535,
+output meta2 := {
+    name := "rmap",
+    id   := 3535,
 }
 
-var filename: "test." + meta2.name,
+var filename := "test." + meta2.name,
