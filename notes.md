@@ -236,6 +236,55 @@ whatever we ultimately decide to do for evaluation, th etypechekcing will have t
 
 
 
+var messageType: choose {
+    when $input.MTI == "0100": "Authorization Request",
+    when $input.MTI == "0110": "Authorization Response",
+    when $input.MTI == "0200": "Financial Request",
+    when $input.MTI == "0210": "Financial Response",
+}
+
+
+doing another big refactor
+
+    removing NodeMapping
+    making NodeScope abstract again
+    adding dependency cycle detection in typechecking
+    refactoring declaration types
+        will require parsing changes
+    owningParser now stored on Node
+        currently just so that we can access a common stack for typechecking nodes
+    
+    now using getValueType as common case around typecheck()
+        typecheck now returns value type which gets assigned to node, or throws exception on error
+
+
+input and output declarations always have their types imposed by setVariable
+    this may have to change later, since I think in theory we want to be able to compile a mapper without needing to explicitly pass int he types of teh output objects
+    but in any case, we will at least need to know what types we have available and what their identifiers are
+    this part may require some more thinking
+    
+variables currently have their types inferred from the type of the valueNode
+    again, it would probably help to be able to use an explicit type here, but that will require more time to think out
+
+
+declaration type of FIELD is currently sort of a hack I put in place since we do not yet have the required structure to get the parent declaration's type
+    we may just pass this down while parsing since we will know declaration type at parse time
+    this may also help to enable/disable specific syntax at the parsing level depending on the kind of scope/declaration context we are in
+    but idk, maybe this is actually fine as is for now
+    
+
+
+
+just thought of a big issue....
+how to handle polymorphic fields on objects?
+we would need some kind of explicit type on the field declaration in order to know which fields can validly be set in the value object node
+    which seems like good reason to do the `name: Type() = value;` syntax for declarations, since that would give us syntactic space for types and constructors
+I'm quite confident this is not something that the existing mapper is able to handle...
+
+
+now that I've simplified the declaration syntax a bit, it should actually be relatively simple to add constructors and type expressions to declarations
+
+
 
 
 
