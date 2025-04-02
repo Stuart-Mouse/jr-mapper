@@ -244,6 +244,13 @@ var messageType: choose {
 }
 
 
+
+
+
+
+
+
+
 doing another big refactor
 
     removing NodeMapping
@@ -286,10 +293,17 @@ now that I've simplified the declaration syntax a bit, it should actually be rel
 
 
 
+we can probably remove the `=` in declarations and use only a colon, but this will require always checking for a constructor expression before a value expression, and handling the fac tthat there is no syntactic separation between the two
+which again, should be fine since constructor expressions are all very simple and follow the form of `identifier(..parameters)`
+the only problem we may have here is that if we want to have utility functions, either those or constructors will have to be syntactically marked as such so there is no confusion.
+    because those need to be differentiable syntactically, not just in typechecking
+
+I will leave the = for now while I implement constructors and method calls, but in the future we will want to workshop this syntax
 
 
-
-
+we can probably remove the need for hint_value if we change how output objects work slightly.
+    we will need explicit types on the output objects and then we can just have some getOutput() method on the parser that allows the user to retrieve results after executing the mapper
+    but then again, maybe we will still need hint_value so that we can have constructors and value expressions on objects assign to the same object...
 
 
 

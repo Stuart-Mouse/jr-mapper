@@ -57,7 +57,13 @@ public abstract class Node {
             var sb = new StringBuilder();
             sb.append("Circular dependency detected while typechecking:\n");
             for (var node: stack) {
-                sb.append("\t").append(node.location()).append("\n");
+                sb.append("\t").append(node.location()).append(" ");
+                if (node instanceof NodeDeclaration decl) {
+                    sb.append("DECL: ").append(decl.name);
+                } else {
+                    node.serialize(sb);
+                }
+                sb.append("\n");
             }
             throw new RuntimeException(sb.toString());
         }
@@ -66,21 +72,39 @@ public abstract class Node {
     
     final void popDependency() {
         // This assert makes sure that we don't forget to call pop for each matching push.
-        assert(owningParser.typecheckingStack.pop() == this);
+        var last_pushed = owningParser.typecheckingStack.pop();
+        assert(last_pushed == this);
         if (this instanceof NodeDeclaration declaration) {
             owningParser.evaluationBuffer.add(declaration);
         }
     }
     
-    final Class typecheck(Class hint_type) {
-        if (isTypechecked()) return valueType;
+    // implemented for the sake of method parameter typechecking, where we may fail due to a missing type hint which can be provided in the second pass. 
+    final Class<?> tryTypecheck(Class<?> hint_type) {
+        try { return typecheck(hint_type); } catch(Exception e) { return null; }
+    }
+    
+    final Class<?> typecheck(Class<?> hint_type) {
+        if (isTypechecked()) {
+            if (hint_type != null && hint_type != valueType) {
+                System.out.println(location() + ": Info: typecheck() called with new type hint on node previously typechecked. Attempting to re-evaluating type...");
+                flags.remove(Flags.TYPECHECKED); // manually remove so that we don't trip the dependency cycle detection.
+            } else {
+                System.out.println(location() + ": Info: typecheck() called on node previously typechecked. Returning result of previous typecheck.");
+                return valueType;
+            }
+        }
         pushDependency();
-        
-        valueType = _typecheck(hint_type);
-        assert(valueType != null);
-        
-        popDependency();
-        setTypechecked();
+        try {
+            // TODO: is there really no way to defer the pop so that we don't have to duplicate to all control paths?
+            valueType = _typecheck(hint_type);
+            if (valueType == null) {
+                throw new RuntimeException(location() + ": Error: typecheck() returned null.");
+            }
+        } finally {
+            popDependency();
+            setTypechecked(); // set typechecked flag whether or not we succeed. That way, we at least detect re-typechecking as above.
+        }
         return valueType;
     }
     
@@ -97,14 +121,14 @@ public abstract class Node {
         return result;
     }
 
-    boolean isAssignableFrom(Class type) {
+    boolean isAssignableFrom(Class<?> type) {
         return valueType.isAssignableFrom(type) || NodeNumber.areMatchingTypes(valueType, type);
     }
     
     // specific case must be implemented for each subclass
-    abstract Class   _typecheck(Class hint_type);
-    abstract void    _serialize(StringBuilder sb);
-    abstract Object  _evaluate(Object hint_value);
+    abstract Class<?> _typecheck(Class<?> hint_type);
+    abstract void     _serialize(StringBuilder sb);
+    abstract Object   _evaluate(Object hint_value);
     
     // overload provided for convenience when serializing root node of some expression
     public final String toString() {

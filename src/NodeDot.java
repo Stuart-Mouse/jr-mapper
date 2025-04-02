@@ -9,10 +9,9 @@ public class NodeDot extends Node {
     }
 
     Node   left, right;
-    Field  resolvedField;
     Method resolvedMethod;
 
-    Class _typecheck(Class hint_type) {
+    Class<?> _typecheck(Class<?> hint_type) {
         var left_type = left.typecheck(null);
         if (left_type == null) {
             throw new RuntimeException(left.location() + ": Error: failed to get left type in binary dot.");
@@ -21,17 +20,16 @@ public class NodeDot extends Node {
         if (right instanceof NodeIdentifier identifier) {
             // We manually typecheck right side identifier in this case. Perks of not making everythign private.
             try {
-                resolvedField = left_type.getDeclaredField(identifier.name);
-                right.valueType = resolvedField.getType();
-                right.setTypechecked();
+                identifier.resolvedField = left_type.getDeclaredField(identifier.name);
+                identifier.valueType = identifier.resolvedField.getType();
+                identifier.setTypechecked();
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException(identifier.location() + ": Error: no such field '" + identifier.name + "' on object of type '" + left.valueType + "'.");
             }
         }
         else if (right instanceof NodeMethodCall method_call) {
-            // TODO: This logic for this case should actually be handled in NodeMethodCall.typecheck(), which should set some member for the resolved method which we just check here.
-            // if (!method_call.typecheck(left.valueType)); // left.valueType is used as hint_type for method call since method calls need to know the base type, not result type.
-            throw new RuntimeException(right.location() + ": Error: method calls not yet implemented.");
+            // NOTE: we hint with left type for method calls, since the method call obviously needs to know the base object type to which the method belongs.
+            right.typecheck(left_type);
         }
         else {
             throw new RuntimeException(right.location() + ": Error: invalid node type on right-hand side of NodeDot.");
@@ -47,20 +45,19 @@ public class NodeDot extends Node {
     }
 
     Object _evaluate(Object hint_value) {
-        // TODO: technically, we should only have to get the value reference here, not actually evaluate the entire left side value.
-        //       but this will be complicated to implement, I think
         var left_value = left.evaluate(null);
 
-        if (resolvedField != null) {
+        if (right instanceof NodeIdentifier identifier) {
+            assert(identifier.resolvedField != null);
             try {
-                resolvedField.setAccessible(true);
-                return resolvedField.get(left_value);
+                identifier.resolvedField.setAccessible(true);
+                return identifier.resolvedField.get(left_value);
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(location() + ": Error: field '" + ((NodeIdentifier)right).name + "' on object of type '" + left.valueType + "' is not accessible.");
             }
         }
-        else if (resolvedMethod != null) {
-            // method_call.resolvedMethod.invoke();
+        else if (right instanceof NodeMethodCall method_call) {
+             return method_call.evaluate(left_value);
         }
         
         assert(false);

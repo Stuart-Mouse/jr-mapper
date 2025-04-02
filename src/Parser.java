@@ -26,9 +26,11 @@ public class Parser {
     public static class MetaData {
         public String  name;
         public int     id;
+
+        public String getVersion(int i) { return Integer.toString(i) + ".0"; };
     };
 
-    public boolean setVariable(String name, Object value, Class type) {
+    public boolean setVariable(String name, Object value, Class<?> type) {
         var declaration = root.resolveDeclaration(name);
         if (declaration == null || declaration.declarationType == NodeDeclaration.DeclarationType.VARIABLE) {
             System.out.println("Error: attempt to set variable '" + name + "' invalidly.");
@@ -110,12 +112,11 @@ public class Parser {
                  lexer.getToken(); // eat the dot
                  var dot = new NodeDot(this, currentScope, token);
                  dot.left = left;
-                 var identifier_token = lexer.getToken();
-                 if (identifier_token.type() != Token.IDENTIFIER) {
-                     System.out.println(identifier_token.location() + ": Error: expected an identifier after dot.");
+                 dot.right = parseExpression(999);
+                 if (dot.right == null) {
+                     System.out.println(dot.location() + "Error: unable to parse expression on right-hand side of dot.");
                      return null;
                  }
-                 dot.right = new NodeIdentifier(this, currentScope, identifier_token);
                  return dot;
 
              //   case Token.OPEN_PAREN:
@@ -157,7 +158,36 @@ public class Parser {
 
         switch (token.type()) {
             case Token.IDENTIFIER -> {
-                return new NodeIdentifier(this, currentScope, token);
+                var identifier = new NodeIdentifier(this, currentScope, token);
+
+                // NOTE: note sure if this is the best place for parsing method calls...
+                Token open_paren = lexer.expectToken(Token.OPEN_PAREN);
+                if (open_paren == null) {
+                    return identifier;
+                } else {
+                    var method_call = new NodeMethodCall(this, currentScope, token);
+                    method_call.identifier = identifier;
+
+                    // we have to check if close paren is directly after open paren, otherwise parseCommaSeparatedExpressions will be sad
+                    Token close_paren = lexer.expectToken(Token.CLOSE_PAREN);
+                    if (close_paren == null) {
+                        method_call.specifiedParameters = parseCommaSeparatedExpressions();
+                        if (method_call.specifiedParameters == null) {
+                            System.out.println(method_call.location() + ": Error: unable to parse parameter expressions in method call.");
+                            return null;
+                        }
+
+                        close_paren = lexer.expectToken(Token.CLOSE_PAREN);
+                        if (close_paren == null) {
+                            System.out.println(lexer.location() + ": Error: expected close parenthesis after method call parameter list, to match open parenthesis at " + open_paren.location() + ".");
+                            return null;
+                        }
+                    } else {
+                        method_call.specifiedParameters = new ArrayList<>();
+                    }
+
+                    return method_call;
+                }
             }
             case Token.NUMBER -> {
                 return new NodeNumber(this, currentScope, token);
@@ -177,9 +207,6 @@ public class Parser {
             case Token.STRING -> {
                 return new NodeString(this, currentScope, token);
             }
-//            case Token.DOT: {
-//                return new NodeDot();
-//            }
             case Token.OPEN_BRACE -> {
                 var node = new NodeObject(this, currentScope, token);
                 currentScope = node;
@@ -201,7 +228,7 @@ public class Parser {
             //     if (lexer.expectToken(Token.CLOSE_BRACKET) != null) {
             //         node.valueNodes = parseCommaSeparatedExpressions();
             //         if (node.valueNodes == null) {
-            //             System.out.println("Error while trying to parse inner declarations of NodeObject.");
+            //             System.out.println("Error while trying to parse inner declarations of NodeArray.");
             //             currentScope = node.parentScope;
             //             return null;
             //         }
@@ -286,10 +313,11 @@ public class Parser {
             System.out.println("Error: expected colon after identifier in variable declaration at " + colon.location() + ".");
             return null;
         }
-        
-        // NOTE: this can be null, in which case we just try to infer the type when typechecking
-        declaration.constructorNode = parseExpression(0);
-        
+
+        if (lexer.peekToken().type() != Token.EQUALS) {
+            declaration.constructorNode = parseExpression(0);
+        }
+
         Token equal_sign = lexer.getToken();
         if (equal_sign.type() != Token.EQUALS) {
             System.out.println("Error: expected equal sign after colon in variable declaration at " + equal_sign.location() + ".");

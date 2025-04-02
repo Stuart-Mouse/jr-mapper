@@ -1,5 +1,5 @@
 output meta := {
-    name := "Mapper Test (" + filename + ")",
+    name := "Mapper Test v" + meta2.getVersion(5) + " (" + filename + ")",
     id   := meta2.id,
 }
 

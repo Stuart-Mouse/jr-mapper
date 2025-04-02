@@ -21,6 +21,8 @@ public class NodeNumber extends Node {
     //       it may actually be wiser to just move the dynamic number casts out to their own utility function,
     //       similar to how I do it in the data packer's remap_data functions.
     Class _typecheck(Class hint_type) {
+        if (hint_type == null) return valueType;
+
         if (valueType == Double.class && !isFloaty(hint_type)) {
             System.out.println(this.location() + ": Warning: potential loss of information in conversion from Double to '" + hint_type + "'.");
         }

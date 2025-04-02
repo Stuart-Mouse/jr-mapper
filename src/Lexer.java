@@ -26,6 +26,10 @@ public class Lexer {
     private int     sourceTextCursor;
     private Token   nextToken;
 
+    String location() {
+        return "(" + sourceLine + ":" + sourceColumn + ")";
+    }
+
     public Token expectToken(int token_type) {
         if (peekToken().type() == token_type) {
             return getToken();
