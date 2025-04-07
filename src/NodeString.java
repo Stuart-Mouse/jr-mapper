@@ -8,12 +8,12 @@ public class NodeString extends Node {
 
     String value;
 
-    Class _typecheck(Class hint_type) {
+    Class<?> _typecheck(Class<?> hint_type) {
         return String.class;
     }
 
     void _serialize(StringBuilder sb) {
-        sb.append("\"" + value + "\"");
+        sb.append("\"").append(value).append("\"");
     }
 
     Object _evaluate(Object hint_value) {

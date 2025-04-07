@@ -27,7 +27,7 @@ public class NodeObject extends NodeScope {
         return null;
     }
 
-    Class _typecheck(Class hint_type) {
+    Class<?> _typecheck(Class<?> hint_type) {
         if (hint_type == null) {
             throw new RuntimeException(location() + ": Error: no hint type provided to NodeObject.typecheck().");
         }

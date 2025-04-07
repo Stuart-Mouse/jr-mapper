@@ -14,6 +14,20 @@ public class NodeMethodCall extends Node {
 //    Constructor     resolvedConstructor;
     ArrayList<Node> specifiedParameters;
 
+    public static ArrayList<Method> getAllObjectMethods(Class<?> type) {
+        var methods = new ArrayList<Method>();
+        if (type != null) {
+            methods.addAll(Arrays.asList(type.getDeclaredMethods()));
+            for (var anInterface: type.getInterfaces()) {
+                var interface_methods = getAllObjectMethods(anInterface);
+                methods.addAll(interface_methods);
+            }
+            var interface_methods = getAllObjectMethods(type.getSuperclass());
+            methods.addAll(interface_methods);
+        }
+        return methods;
+    }
+
     // NOTE: hint_type here is the base object type, not the result type.
     // TODO: if hint_type here is null, then this method call is actually a constructor and should be resolved as such
     Class<?> _typecheck(Class<?> hint_type) {
@@ -21,16 +35,8 @@ public class NodeMethodCall extends Node {
             node.tryTypecheck(null);
         }
         
-        var methods = new ArrayList<Method>();
-        
-        // get all available methods on class and superclasses recursively
-        {
-            Class<?> clazz = hint_type;
-            while (clazz != null) {
-                methods.addAll(Arrays.asList(clazz.getMethods()));
-                clazz = clazz.getSuperclass();
-            }
-        }
+        var methods = getAllObjectMethods(hint_type);
+        System.out.println(methods);
 
         // filter by method name and number of parameters
         // this feels bad... there's gotta be a better way to do this.

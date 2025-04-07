@@ -63,17 +63,17 @@ public class NodeOperation extends Node {
             Number result = null;
             if (NodeNumber.isFloaty(left.valueType)) {
                 switch (operator) {
-                    case ADD -> { result = Double.valueOf( ln.doubleValue() + rn.doubleValue() ); }
-                    case SUB -> { result = Double.valueOf( ln.doubleValue() - rn.doubleValue() ); }
-                    case MUL -> { result = Double.valueOf( ln.doubleValue() * rn.doubleValue() ); }
-                    case DIV -> { result = Double.valueOf( ln.doubleValue() / rn.doubleValue() ); }
+                    case ADD -> { result = ln.doubleValue() + rn.doubleValue(); }
+                    case SUB -> { result = ln.doubleValue() - rn.doubleValue(); }
+                    case MUL -> { result = ln.doubleValue() * rn.doubleValue(); }
+                    case DIV -> { result = ln.doubleValue() / rn.doubleValue(); }
                 }
             } else { // else the number must be an integer type
                 switch (operator) {
-                    case ADD -> { result = Long.valueOf( ln.longValue() + rn.longValue() ); }
-                    case SUB -> { result = Long.valueOf( ln.longValue() - rn.longValue() ); }
-                    case MUL -> { result = Long.valueOf( ln.longValue() * rn.longValue() ); }
-                    case DIV -> { result = Long.valueOf( ln.longValue() / rn.longValue() ); }
+                    case ADD -> { result =  ln.longValue() + rn.longValue(); }
+                    case SUB -> { result =  ln.longValue() - rn.longValue(); }
+                    case MUL -> { result =  ln.longValue() * rn.longValue(); }
+                    case DIV -> { result =  ln.longValue() / rn.longValue(); }
                 }
             }
             if (result == null) {
