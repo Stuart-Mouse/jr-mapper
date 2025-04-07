@@ -1,9 +1,10 @@
+import jrmapper.Node;
+import jrmapper.Parser;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
-
-import java.lang.StringBuilder;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,12 +19,6 @@ public class Main {
                 throw new RuntimeException("Failed to parse file!");
             }
 
-            var sample1 = new SampleDerived();
-            parser.setVariable("sample1", sample1, SampleDerived.class);
-
-            var sample2 = new SampleDerived();
-            parser.setVariable("sample2", sample2, SampleDerived.class);
-
             if (!parser.typecheck()) {
                 throw new RuntimeException("Error: failed to typecheck file.");
             }
@@ -31,7 +26,10 @@ public class Main {
                 throw new RuntimeException("Error: failed to evaluate file.");
             }
 
-            System.out.println(root.toString());
+            SampleDerived sample1 = (SampleDerived)parser.getOutput("sample1");
+            SampleSuper   sample2 = (SampleSuper)  parser.getOutput("sample2");
+
+            System.out.println(root);
 
             System.out.println("sample1.text: " + sample1.text);
             System.out.println("sample1.number: " + sample1.number);
@@ -41,9 +39,9 @@ public class Main {
 
             System.out.println("sample2.text: " + sample2.text);
             System.out.println("sample2.number: " + sample2.number);
-            System.out.println("sample2.fraction: " + sample2.fraction);
+//            System.out.println("sample2.fraction: " + sample2.fraction);
             System.out.println("sample2.getString(): " + sample2.getString());
-            System.out.println("sample2.getAlternateString(): " + sample2.getAlternateString());
+//            System.out.println("sample2.getAlternateString(): " + sample2.getAlternateString());
 
         } catch(Exception e) {
             System.out.println("Exception: " + e.toString());

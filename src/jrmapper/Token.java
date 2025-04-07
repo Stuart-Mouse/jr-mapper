@@ -1,8 +1,5 @@
+package jrmapper;
 
-/*
-
-
-*/
 public record Token(int type, int line, int column, String text) {
     public String location() {
         return "(" + line + ":" + column + ")";

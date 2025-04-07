@@ -1,3 +1,3 @@
 public interface SampleInterface {
-    String getAlternateString();
+    public String getAlternateString();
 }

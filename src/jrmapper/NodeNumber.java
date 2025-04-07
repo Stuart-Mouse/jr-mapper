@@ -1,5 +1,7 @@
+package jrmapper;
+
 public class NodeNumber extends Node {
-    NodeNumber(Parser owningParser, NodeScope parent, Token token) {
+    public NodeNumber(Parser owningParser, NodeScope parent, Token token) {
         super(owningParser, parent, token);
         // NOTE: for now, we only store as Double or Long, based on whether the source text contained a '.'
         //       we also tentatively set the valueType, though this may be altered during typechecking to coerce to a different number type.
@@ -15,12 +17,12 @@ public class NodeNumber extends Node {
 
     // need to be able to store either an integer or float losslessly depending on what was lexed
     // but also need to be able to coerce to whatever other type is needed when we typecheck the node
-    Number value;
+    public Number value;
 
     // TODO: we could use better checking here to detect narrowing conversions and emit warnings
     //       it may actually be wiser to just move the dynamic number casts out to their own utility function,
     //       similar to how I do it in the data packer's remap_data functions.
-    Class<?> _typecheck(Class<?> hint_type) {
+    public Class<?> _typecheck(Class<?> hint_type) {
         if (hint_type == null) return valueType;
 
         if (valueType == Double.class && !isFloaty(hint_type)) {
@@ -59,34 +61,34 @@ public class NodeNumber extends Node {
         return valueType;
     }
 
-    void _serialize(StringBuilder sb) {
+    public void _serialize(StringBuilder sb) {
         sb.append(value.toString());
     }
 
-    Object _evaluate(Object hint_value) {
+    public Object _evaluate(Object hint_value) {
         return value;
     }
 
-    static boolean isNumericType(Class<?> type) {
+    public static boolean isNumericType(Class<?> type) {
         return isFloaty(type) || isIntegeresque(type) || type.equals(Number.class);
     }
 
-    static boolean isFloaty(Class<?> type) {
+    public static boolean isFloaty(Class<?> type) {
         return isDouble(type) || isFloat(type);
     }
-    
-    static boolean isIntegeresque(Class<?> type) {
+
+    public static boolean isIntegeresque(Class<?> type) {
         return isLong(type) || isInteger(type) || isShort(type) || isByte(type);
     }
     
-    static boolean isDouble  (Class<?> type) { return type.equals( Double.class) || type.equals(double.class); }
-    static boolean isFloat   (Class<?> type) { return type.equals(  Float.class) || type.equals( float.class); }
-    static boolean isLong    (Class<?> type) { return type.equals(   Long.class) || type.equals(  long.class); }
-    static boolean isInteger (Class<?> type) { return type.equals(Integer.class) || type.equals(   int.class); }
-    static boolean isShort   (Class<?> type) { return type.equals(  Short.class) || type.equals( short.class); }
-    static boolean isByte    (Class<?> type) { return type.equals(   Byte.class) || type.equals(  byte.class); }
-    
-    static boolean areMatchingTypes(Class<?> type_a, Class<?> type_b) {
+    public static boolean isDouble  (Class<?> type) { return type.equals( Double.class) || type.equals(double.class); }
+    public static boolean isFloat   (Class<?> type) { return type.equals(  Float.class) || type.equals( float.class); }
+    public static boolean isLong    (Class<?> type) { return type.equals(   Long.class) || type.equals(  long.class); }
+    public static boolean isInteger (Class<?> type) { return type.equals(Integer.class) || type.equals(   int.class); }
+    public static boolean isShort   (Class<?> type) { return type.equals(  Short.class) || type.equals( short.class); }
+    public static boolean isByte    (Class<?> type) { return type.equals(   Byte.class) || type.equals(  byte.class); }
+
+    public static boolean areMatchingTypes(Class<?> type_a, Class<?> type_b) {
         return isDouble (type_a) && isDouble (type_b) || 
                isFloat  (type_a) && isFloat  (type_b) || 
                isLong   (type_a) && isLong   (type_b) || 
@@ -107,11 +109,11 @@ public class NodeNumber extends Node {
         return 0;
     }
 
-    static Class<?> getWiderType(Class<?> type_a, Class<?> type_b) {
+    public static Class<?> getWiderType(Class<?> type_a, Class<?> type_b) {
         return getTypeScore(type_a) > getTypeScore(type_b) ? type_a : type_b;
     }
 
-    static Number coerceNumber(Class<?> to_type, Number from_value) {
+    public static Number coerceNumber(Class<?> to_type, Number from_value) {
         if (isDouble(to_type)) {
             return from_value.doubleValue();
         }

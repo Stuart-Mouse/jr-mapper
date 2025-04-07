@@ -1,4 +1,4 @@
-/*
+package jrmapper;/*
     Serialization should work without nodes needing to be typechecked.
     The entire AST as produced by the Parser is initially untyped, and then all types are resolved in a second pass.
 
@@ -13,7 +13,7 @@
 import java.util.EnumSet;
 
 public abstract class Node {
-    Node(Parser owningParser, NodeScope parentScope, Token token) {
+    public Node(Parser owningParser, NodeScope parentScope, Token token) {
         this.owningParser = owningParser;
         this.parentScope  = parentScope;
         if (token != null) {
@@ -22,20 +22,20 @@ public abstract class Node {
         }
     }
 
-    Parser          owningParser;
-    NodeScope       parentScope;
-    EnumSet<Flags>  flags = EnumSet.noneOf(Flags.class);
-    Class           valueType;
+    public Parser          owningParser;
+    public NodeScope       parentScope;
+    public EnumSet<Flags>  flags = EnumSet.noneOf(Flags.class);
+    public Class           valueType;
 
     // source location info, copied from token in constructor
-    int line;
-    int column;
+    public int line;
+    public int column;
 
-    String location() {
+    public String location() {
         return "(" + line + ":" + column + ")";
     }
 
-    enum Flags {
+    public enum Flags {
         TYPECHECKED,
         EVALUATED,
         PARENTHESIZED;
@@ -43,13 +43,13 @@ public abstract class Node {
         public static final EnumSet<Flags> ALL = EnumSet.allOf(Flags.class);
     }
     
-    boolean isTypechecked()   { return flags.contains(Flags.TYPECHECKED); }
-    boolean isParenthesized() { return flags.contains(Flags.PARENTHESIZED); }
-    boolean isEvaluated()     { return flags.contains(Flags.EVALUATED); }
+    public boolean isTypechecked()   { return flags.contains(Flags.TYPECHECKED); }
+    public boolean isParenthesized() { return flags.contains(Flags.PARENTHESIZED); }
+    public boolean isEvaluated()     { return flags.contains(Flags.EVALUATED); }
 
-    boolean setTypechecked()   { return flags.add(Flags.TYPECHECKED); }
-    boolean setParenthesized() { return flags.add(Flags.PARENTHESIZED); }
-    boolean setEvaluated()     { return flags.add(Flags.EVALUATED); }
+    public boolean setTypechecked()   { return flags.add(Flags.TYPECHECKED); }
+    public boolean setParenthesized() { return flags.add(Flags.PARENTHESIZED); }
+    public boolean setEvaluated()     { return flags.add(Flags.EVALUATED); }
 
     final void pushDependency() {
         var stack = owningParser.typecheckingStack;
@@ -80,11 +80,11 @@ public abstract class Node {
     }
     
     // implemented for the sake of method parameter typechecking, where we may fail due to a missing type hint which can be provided in the second pass. 
-    final Class<?> tryTypecheck(Class<?> hint_type) {
+    public final Class<?> tryTypecheck(Class<?> hint_type) {
         try { return typecheck(hint_type); } catch(Exception e) { return null; }
     }
     
-    final Class<?> typecheck(Class<?> hint_type) {
+    public final Class<?> typecheck(Class<?> hint_type) {
         if (isTypechecked()) {
             if (hint_type != null && hint_type != valueType) {
                 System.out.println(location() + ": Info: typecheck() called with new type hint on node previously typechecked. Attempting to re-evaluating type...");
@@ -108,27 +108,27 @@ public abstract class Node {
         return valueType;
     }
     
-    final void serialize(StringBuilder sb) {
+    public final void serialize(StringBuilder sb) {
         if (isParenthesized()) sb.append("(");
         _serialize(sb);
         if (isParenthesized()) sb.append(")");
     }
     
-    final Object evaluate(Object hint_value) {
+    public final Object evaluate(Object hint_value) {
         assert(isTypechecked());
         var result = _evaluate(hint_value);
         setEvaluated();
         return result;
     }
 
-    boolean isAssignableFrom(Class<?> type) {
+    public boolean isAssignableFrom(Class<?> type) {
         return valueType.isAssignableFrom(type) || NodeNumber.areMatchingTypes(valueType, type);
     }
     
     // specific case must be implemented for each subclass
-    abstract Class<?> _typecheck(Class<?> hint_type);
-    abstract void     _serialize(StringBuilder sb);
-    abstract Object   _evaluate(Object hint_value);
+    public abstract Class<?> _typecheck(Class<?> hint_type);
+    public abstract void     _serialize(StringBuilder sb);
+    public abstract Object   _evaluate(Object hint_value);
     
     // overload provided for convenience when serializing root node of some expression
     public final String toString() {

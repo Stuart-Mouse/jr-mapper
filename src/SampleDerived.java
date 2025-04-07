@@ -1,10 +1,15 @@
 public class SampleDerived extends SampleSuper {
-    double fraction;
+    public SampleDerived() {}
+    public SampleDerived(double fraction) {
+        this.fraction = fraction;
+    }
 
-    String getString() {
+    public double fraction;
+
+    public String getString() {
         return text + " (" + number + ")";
     }
-    String getAlternateString() {
+    public String getAlternateString() {
         return "alternate (" + fraction + ")";
     }
 }

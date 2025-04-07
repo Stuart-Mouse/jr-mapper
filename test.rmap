@@ -1,13 +1,12 @@
-output sample1 := {
+output sample1: SampleDerived() = {
     text     := "Testing file: " + filename,
     number   := sample2.number + 1,
     fraction := 3 + sample2.fraction,
 }
 
-output sample2 := {
+output sample2: SampleDerived(5.5) = {
     text     := "rmap",
     number   := 3535,
-    fraction := 5.5,
 }
 
 var filename := "test." + sample2.text,

@@ -1,6 +1,6 @@
-public abstract class SampleSuper {
-    int number;
-    String text;
+public class SampleSuper {
+    public int number;
+    public String text;
 
-    abstract String getString();
+    public String getString() { return "super (" + text + ")"; };
 }

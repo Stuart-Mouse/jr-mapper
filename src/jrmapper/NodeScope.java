@@ -1,3 +1,4 @@
+package jrmapper;
 /*
     Abstract interface for all nodes which introduce a scope for declarations.
     Currently not a subclass of Node for the simple reason that we may want to have some language constructs which have scope but which are not Nodes.
@@ -7,20 +8,20 @@
 import java.util.ArrayList;
 
 public abstract class NodeScope extends Node {
-    NodeScope(Parser owningParser, NodeScope parent, Token token) {
+    public NodeScope(Parser owningParser, NodeScope parent, Token token) {
         super(owningParser, parent, token);
     }
 
-    ArrayList<NodeDeclaration> declarations = new ArrayList<NodeDeclaration>();
+    public ArrayList<NodeDeclaration> declarations = new ArrayList<NodeDeclaration>();
 
     // returns existing declaration if identifier is already declared in this scope
-    NodeDeclaration addDeclaration(NodeDeclaration decl) {
+    public NodeDeclaration addDeclaration(NodeDeclaration decl) {
         var other = resolveDeclaration(decl.name);
         if (other != null) return other;
         declarations.add(decl);
         return null;
     }
-    NodeDeclaration resolveDeclaration(String identifier) {
+    public NodeDeclaration resolveDeclaration(String identifier) {
         for (var decl: declarations) {
             if (decl.name.equals(identifier)) {
                 return decl;

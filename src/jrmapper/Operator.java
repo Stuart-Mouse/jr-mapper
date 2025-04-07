@@ -1,3 +1,4 @@
+package jrmapper;
 
 public enum Operator {
     // ASSIGN_EQUAL              (Type.BINARY, 1, Token.EQUALS),
@@ -15,10 +16,10 @@ public enum Operator {
     MUL                       (Type.BINARY, 6, "*", Token.STAR),
     DIV                       (Type.BINARY, 6, "/", Token.SLASH);
 
-    Type    type;
-    int     precedence;
-    int     tokenType;
-    String  printName;
+    public Type    type;
+    public int     precedence;
+    public int     tokenType;
+    public String  printName;
 
     public enum Type { UNARY, BINARY, ASSIGNMENT, };
     private Operator(Type type, int precedence, String printName, int tokenType) {

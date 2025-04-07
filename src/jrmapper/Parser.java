@@ -1,10 +1,4 @@
-/*
-    TODO:
-        implement basic expression parsing for builtin types
-        implement member access generically, then through some interface
-        implement array subscripting, probably just a generalization on the above where the indexing expression is more dynamic
-
-*/
+package jrmapper;
 
 import java.util.ArrayList;
 import java.util.Stack;
@@ -31,6 +25,38 @@ public class Parser {
         declaration.valueType = type;
         declaration.value     = value;
         return true;
+    }
+
+    public boolean setInput(String name, Object value, Class<?> type) {
+        var declaration = root.resolveDeclaration(name);
+        if (declaration == null) {
+            System.out.println("Error: attempt to set input variable '" + name + "', but no such input variable is declared.");
+            return false;
+        }
+        if (declaration.declarationType != NodeDeclaration.DeclarationType.INPUT) {
+            System.out.println("Error: attempt to set internal or output variable '" + name + "'. Only input variables can be set with this method.");
+            return false;
+        }
+        declaration.valueType = type;
+        declaration.value     = value;
+        return true;
+    }
+
+    public Object getOutput(String name) {
+        if (!root.flags.contains(Node.Flags.EVALUATED)) {
+            System.out.println("Error: attempt to get output variable '" + name + "' before mappings have been evaluated.");
+            return null;
+        }
+        var declaration = root.resolveDeclaration(name);
+        if (declaration == null) {
+            System.out.println("Error: attempt to get output variable '" + name + "', but no such output variable is declared.");
+            return null;
+        }
+        if (declaration.declarationType != NodeDeclaration.DeclarationType.OUTPUT) {
+            System.out.println("Error: attempt to get internal or input variable '" + name + "'. Only out variables can be retrieved with this method.");
+            return null;
+        }
+        return declaration.value;
     }
 
     public Node parseExpression(String expr) {
@@ -363,6 +389,7 @@ public class Parser {
         for (var decl: evaluationBuffer) {
             decl.evaluate(null);
         }
+        root.flags.add(Node.Flags.EVALUATED);
         return true;
     }
 }

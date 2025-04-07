@@ -1,18 +1,18 @@
-import java.util.EnumSet;
+package jrmapper;
 
 public class NodeOperation extends Node {
-    NodeOperation(Parser owningParser, NodeScope parent, Token token, Operator operator, Node left, Node right) {
+    public NodeOperation(Parser owningParser, NodeScope parent, Token token, Operator operator, Node left, Node right) {
         super(owningParser, parent, token);
         this.operator = operator;
         this.left     = left;
         this.right    = right;
     }
 
-    Operator  operator;
-    Node      left;
-    Node      right;
+    public Operator  operator;
+    public Node      left;
+    public Node      right;
 
-    Class<?> _typecheck(Class<?> hint_type) {
+    public Class<?> _typecheck(Class<?> hint_type) {
         // TODO: unary operations
 
         Class<?>  left_type =  left.typecheck(hint_type);
@@ -41,13 +41,13 @@ public class NodeOperation extends Node {
         throw new RuntimeException(location() + ": Error: left and right types of operation do not match: " + left_type + " vs " + right_type + ".");
     }
 
-    void _serialize(StringBuilder sb) {
+    public void _serialize(StringBuilder sb) {
         left.serialize(sb);
         sb.append(" " + operator.printName + " ");
         right.serialize(sb);
     }
 
-    Object _evaluate(Object hint_value) {
+    public Object _evaluate(Object hint_value) {
         var lv =  left.evaluate(null);
         var rv = right.evaluate(null);
 

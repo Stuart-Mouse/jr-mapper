@@ -1,17 +1,16 @@
-import java.lang.reflect.Field;
+package jrmapper;
+
 import java.lang.reflect.Method;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
 
 public class NodeDot extends Node {
-    NodeDot(Parser owningParser, NodeScope parentScope, Token token) {
+    public NodeDot(Parser owningParser, NodeScope parentScope, Token token) {
         super(owningParser, parentScope, token);
     }
 
-    Node   left, right;
-    Method resolvedMethod;
+    public Node   left, right;
+    public Method resolvedMethod;
 
-    Class<?> _typecheck(Class<?> hint_type) {
+    public Class<?> _typecheck(Class<?> hint_type) {
         var left_type = left.typecheck(null);
         if (left_type == null) {
             throw new RuntimeException(left.location() + ": Error: failed to get left type in binary dot.");
@@ -37,13 +36,13 @@ public class NodeDot extends Node {
         return right.valueType;
     }
 
-    void _serialize(StringBuilder sb) {
+    public void _serialize(StringBuilder sb) {
         left.serialize(sb);
         sb.append(".");
         right.serialize(sb);
     }
 
-    Object _evaluate(Object hint_value) {
+    public Object _evaluate(Object hint_value) {
         var left_value = left.evaluate(null);
 
         if (right instanceof NodeIdentifier identifier) {

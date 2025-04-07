@@ -1,3 +1,4 @@
+package jrmapper;
 
 /*
     This is a relatively simple lexer implementation, somewhat complicated by Java because it's a bad language.
@@ -216,7 +217,8 @@ public class Lexer {
             }
             c = advance(1);
 
-            return new Token(Token.STRING, line, column, sourceText.substring(start, end));
+            var token_type = (c == '`') ? Token.IDENTIFIER : Token.STRING;
+            return new Token(token_type, line, column, sourceText.substring(start, end));
         }
 
         return new Token(Token.ERROR, line, column, "Unexpected character encountered.");

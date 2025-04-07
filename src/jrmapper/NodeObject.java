@@ -1,14 +1,13 @@
+package jrmapper;
 /*
     A NodeObject represents a structured aggregate type, akin to a JSON Object.
     The sub-nodes of a NodeObject are all NodeFields.
 */
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class NodeObject extends NodeScope {
-    NodeObject(Parser owningParser, NodeScope parent, Token token) {
+    public NodeObject(Parser owningParser, NodeScope parent, Token token) {
         super(owningParser, parent, token);
     }
 
@@ -27,7 +26,7 @@ public class NodeObject extends NodeScope {
         return null;
     }
 
-    Class<?> _typecheck(Class<?> hint_type) {
+    public Class<?> _typecheck(Class<?> hint_type) {
         if (hint_type == null) {
             throw new RuntimeException(location() + ": Error: no hint type provided to NodeObject.typecheck().");
         }
@@ -45,7 +44,7 @@ public class NodeObject extends NodeScope {
         return valueType;
     }
 
-    void _serialize(StringBuilder sb) {
+    public void _serialize(StringBuilder sb) {
         sb.append("{\n");
         if (declarations != null) {
             for (var decl: declarations) {
@@ -56,7 +55,7 @@ public class NodeObject extends NodeScope {
         sb.append("}");
     }
 
-    Object _evaluate(Object hint_value) {
+    public Object _evaluate(Object hint_value) {
         // NOTE: for now we are asserting that a NodeObject is not evaluated more than once,
         //       since only Identifiers and Declarations should ever be executed multiple times.
         assert(!isEvaluated()); 
