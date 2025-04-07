@@ -14,3 +14,9 @@ var num: `java.lang.Double`("5.0") = 7.7,
 var filename := "test." + sample2.text,
 
 output b := sample1.fraction > sample2.fraction,
+
+output v := choose {
+    when sample1: 77,
+    when 5 > 10: 88,
+    when b: 99
+}

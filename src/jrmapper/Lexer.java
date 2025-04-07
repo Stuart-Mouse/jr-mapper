@@ -174,8 +174,10 @@ public class Lexer {
                 case "var":    return new Token(Token.DECL_VAR,    line, column, identifier);
                 case "input":  return new Token(Token.DECL_INPUT,  line, column, identifier);
                 case "output": return new Token(Token.DECL_OUTPUT, line, column, identifier);
+                case "choose": return new Token(Token.CHOOSE,      line, column, identifier);
+                case "when":   return new Token(Token.WHEN,        line, column, identifier);
+                case "else":   return new Token(Token.ELSE,        line, column, identifier);
             }
-
             return new Token(Token.IDENTIFIER, line, column, identifier);
         }
 

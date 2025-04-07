@@ -175,6 +175,40 @@ public class Parser {
         }
 
         switch (token.type()) {
+            case Token.CHOOSE -> {
+                var choice = new NodeChoice(this, currentScope, token);
+                
+                Token open_brace = lexer.getToken();
+                if (open_brace.type() != Token.OPEN_BRACE) {
+                    System.out.println(open_brace.location() + ": Error: expected open brace after keyword 'choose'.");
+                    return null;
+                }
+                
+                Token when_token = lexer.getToken();
+                while (when_token.type() == Token.WHEN) {
+                    var whenNode = new NodeWhen(this, currentScope, when_token);
+                    
+                    whenNode.conditionNode = parseExpression(0);
+                    Token colon = lexer.getToken();
+                    if (colon.type() != Token.COLON) {
+                        System.out.println(colon.location() + ": Error: expected a colon after condition of when statement.");
+                        return null;
+                    }
+                    
+                    whenNode.valueNode = parseExpression(0);
+                    if (!commaCheck(whenNode.valueNode)) return null;
+                    
+                    choice.whenNodes.add(whenNode);
+                    when_token = lexer.getToken();
+                }
+                
+                if (when_token.type() != Token.CLOSE_BRACE) {
+                    System.out.println(when_token.location() + ": Error: expected closing brace for choice block.");
+                    return null;
+                }
+                
+                return choice;
+            }
             case Token.IDENTIFIER -> {
                 var identifier = new NodeIdentifier(this, currentScope, token);
 
@@ -348,9 +382,15 @@ public class Parser {
             return null;
         }
         
+        if (!commaCheck(declaration.valueNode)) return null;
+
+        return declaration;
+    }
+    
+    private boolean commaCheck(Node last_node) {
         // comma after declaration value expression is optional if the expression was an object or array
-        // otherwise, we need to see either the comma or end of scope
-        if (declaration.valueNode instanceof NodeObject) {
+        // otherwise, we need to see either the comma or end of scope    
+        if (last_node instanceof NodeChoice || last_node instanceof NodeObject) {
             lexer.expectToken(Token.COMMA);
         } else {
             var next_token = lexer.peekToken();
@@ -359,11 +399,10 @@ public class Parser {
                 case Token.COMMA: lexer.getToken(); break;
                 default:
                     System.out.println(next_token.location() + ": Error: unexpected token '" + next_token.text() + "'. Expected a comma or end of scope to terminate expression.");
-                    return null;
+                    return false;
             }
         }
-
-        return declaration;
+        return true;
     }
 
     private ArrayList<NodeDeclaration> parseDeclarations(int break_token_type) {

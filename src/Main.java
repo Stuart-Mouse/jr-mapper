@@ -44,6 +44,7 @@ public class Main {
 //            System.out.println("sample2.getAlternateString(): " + sample2.getAlternateString());
 
             System.out.println("b: " + parser.getOutput("b"));
+            System.out.println("v: " + parser.getOutput("v"));
 
         } catch(Exception e) {
             System.out.println("Exception: " + e.toString());

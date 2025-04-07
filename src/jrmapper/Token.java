@@ -52,4 +52,7 @@ public record Token(int type, int line, int column, String text) {
     public static final int DECL_VAR    = 256 + 201;
     public static final int DECL_INPUT  = 256 + 202;
     public static final int DECL_OUTPUT = 256 + 203;
+    public static final int CHOOSE      = 256 + 204;
+    public static final int WHEN        = 256 + 205;
+    public static final int ELSE        = 256 + 206;
 }
