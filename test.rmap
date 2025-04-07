@@ -1,11 +1,13 @@
-output meta := {
-    name := "Mapper Test v" + meta2.getVersion(5) + " (" + filename + ")",
-    id   := meta2.id,
+output sample1 := {
+    text     := "Testing file: " + filename,
+    number   := sample2.number + 1,
+    fraction := 3 + sample2.fraction,
 }
 
-output meta2 := {
-    name := "rmap",
-    id   := 3535,
+output sample2 := {
+    text     := "rmap",
+    number   := 3535,
+    fraction := 5.5,
 }
 
-var filename := "test." + meta2.name,
+var filename := "test." + sample2.text,

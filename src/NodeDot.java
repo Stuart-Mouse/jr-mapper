@@ -19,13 +19,21 @@ public class NodeDot extends Node {
 
         if (right instanceof NodeIdentifier identifier) {
             // We manually typecheck right side identifier in this case. Perks of not making everythign private.
-            try {
-                identifier.resolvedField = left_type.getDeclaredField(identifier.name);
-                identifier.valueType = identifier.resolvedField.getType();
-                identifier.setTypechecked();
-            } catch (NoSuchFieldException e) {
-                throw new RuntimeException(identifier.location() + ": Error: no such field '" + identifier.name + "' on object of type '" + left.valueType + "'.");
+            Class<?> clazz = left_type;
+            while (clazz != null && identifier.resolvedField == null) {
+                System.out.println("Checking object " + clazz + " for field " + identifier.name + "...");
+                try {
+                    identifier.resolvedField = clazz.getDeclaredField(identifier.name);
+                } catch (NoSuchFieldException e) {
+                    System.out.println("Unable to resolved field " + identifier.name + " on object of type " + clazz + ".");
+                }
+                clazz = clazz.getSuperclass();
             }
+            if (identifier.resolvedField == null) {
+                throw new RuntimeException(identifier.location() + ": Error: no such field '" + identifier.name + "' on object of type " + left_type + ".");
+            }
+            identifier.valueType = identifier.resolvedField.getType();
+            identifier.setTypechecked();
         }
         else if (right instanceof NodeMethodCall method_call) {
             // NOTE: we hint with left type for method calls, since the method call obviously needs to know the base object type to which the method belongs.

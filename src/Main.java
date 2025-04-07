@@ -18,11 +18,11 @@ public class Main {
                 throw new RuntimeException("Failed to parse file!");
             }
 
-            parser.metaData = new Parser.MetaData();
-            parser.setVariable("meta", parser.metaData, Parser.MetaData.class);
+            var sample1 = new SampleDerived();
+            parser.setVariable("sample1", sample1, SampleDerived.class);
 
-            var meta2 = new Parser.MetaData();
-            parser.setVariable("meta2", meta2, Parser.MetaData.class);
+            var sample2 = new SampleDerived();
+            parser.setVariable("sample2", sample2, SampleDerived.class);
 
             if (!parser.typecheck()) {
                 throw new RuntimeException("Error: failed to typecheck file.");
@@ -33,8 +33,17 @@ public class Main {
 
             System.out.println(root.toString());
 
-            System.out.println("parser.metaData.name: " + parser.metaData.name);
-            System.out.println("parser.metaData.id: " + parser.metaData.id);
+            System.out.println("sample1.text: " + sample1.text);
+            System.out.println("sample1.number: " + sample1.number);
+            System.out.println("sample1.fraction: " + sample1.fraction);
+            System.out.println("sample1.getString(): " + sample1.getString());
+            System.out.println("sample1.getAlternateString(): " + sample1.getAlternateString());
+
+            System.out.println("sample2.text: " + sample2.text);
+            System.out.println("sample2.number: " + sample2.number);
+            System.out.println("sample2.fraction: " + sample2.fraction);
+            System.out.println("sample2.getString(): " + sample2.getString());
+            System.out.println("sample2.getAlternateString(): " + sample2.getAlternateString());
 
         } catch(Exception e) {
             System.out.println("Exception: " + e.toString());

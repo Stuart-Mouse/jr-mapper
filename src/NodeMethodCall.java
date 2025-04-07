@@ -9,11 +9,13 @@ public class NodeMethodCall extends Node {
         super(owningParser, parent, token);
     }
 
-    NodeIdentifier identifier;
+    NodeIdentifier  identifier;
     Method          resolvedMethod;
+//    Constructor     resolvedConstructor;
     ArrayList<Node> specifiedParameters;
 
     // NOTE: hint_type here is the base object type, not the result type.
+    // TODO: if hint_type here is null, then this method call is actually a constructor and should be resolved as such
     Class<?> _typecheck(Class<?> hint_type) {
         for (var node: specifiedParameters) {
             node.tryTypecheck(null);

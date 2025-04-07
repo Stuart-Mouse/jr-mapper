@@ -308,3 +308,21 @@ we can probably remove the need for hint_value if we change how output objects w
 
 
 
+Roadmap:
+    
+    Constructors
+    Choice expressions
+    Interfaces
+    Testing
+        test with nontrivial object types, various complex expressions
+    Integration
+        clean up parser interface
+        make interface type for custom member binding
+        interface for exposing utility functions
+    Demo?
+    Transpile to Java
+    Integration into MDE
+    Testing
+    
+
+

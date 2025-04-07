@@ -15,20 +15,12 @@ public class Parser {
     public Lexer      lexer = new Lexer();
     public NodeObject root;
     public NodeScope  currentScope;
-    public MetaData   metaData;
 
     // Used during typechecking to detect dependency cycles between declarations and mappings.
     // When declaration nodes are popped from the stack, they'll be pushed onto the end of the evaluationBuffer. 
     // By this method, we end up with a valid evalaution order that respects dependencies between nodes.
     public Stack<Node> typecheckingStack = new Stack<>();
     public ArrayList<NodeDeclaration> evaluationBuffer = new ArrayList<>();
-
-    public static class MetaData {
-        public String  name;
-        public int     id;
-
-        public String getVersion(int i) { return Integer.toString(i) + ".0"; };
-    };
 
     public boolean setVariable(String name, Object value, Class<?> type) {
         var declaration = root.resolveDeclaration(name);

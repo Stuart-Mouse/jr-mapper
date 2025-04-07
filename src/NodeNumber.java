@@ -20,7 +20,7 @@ public class NodeNumber extends Node {
     // TODO: we could use better checking here to detect narrowing conversions and emit warnings
     //       it may actually be wiser to just move the dynamic number casts out to their own utility function,
     //       similar to how I do it in the data packer's remap_data functions.
-    Class _typecheck(Class hint_type) {
+    Class<?> _typecheck(Class<?> hint_type) {
         if (hint_type == null) return valueType;
 
         if (valueType == Double.class && !isFloaty(hint_type)) {
@@ -67,31 +67,70 @@ public class NodeNumber extends Node {
         return value;
     }
 
-    static boolean isNumericType(Class type) {
+    static boolean isNumericType(Class<?> type) {
         return isFloaty(type) || isIntegeresque(type) || type.equals(Number.class);
     }
 
-    static boolean isFloaty(Class type) {
+    static boolean isFloaty(Class<?> type) {
         return isDouble(type) || isFloat(type);
     }
     
-    static boolean isIntegeresque(Class type) {
+    static boolean isIntegeresque(Class<?> type) {
         return isLong(type) || isInteger(type) || isShort(type) || isByte(type);
     }
     
-    static boolean isDouble  (Class type) { return type.equals( Double.class) || type.equals(double.class); }
-    static boolean isFloat   (Class type) { return type.equals(  Float.class) || type.equals( float.class); }
-    static boolean isLong    (Class type) { return type.equals(   Long.class) || type.equals(  long.class); }
-    static boolean isInteger (Class type) { return type.equals(Integer.class) || type.equals(   int.class); }
-    static boolean isShort   (Class type) { return type.equals(  Short.class) || type.equals( short.class); }
-    static boolean isByte    (Class type) { return type.equals(   Byte.class) || type.equals(  byte.class); }
+    static boolean isDouble  (Class<?> type) { return type.equals( Double.class) || type.equals(double.class); }
+    static boolean isFloat   (Class<?> type) { return type.equals(  Float.class) || type.equals( float.class); }
+    static boolean isLong    (Class<?> type) { return type.equals(   Long.class) || type.equals(  long.class); }
+    static boolean isInteger (Class<?> type) { return type.equals(Integer.class) || type.equals(   int.class); }
+    static boolean isShort   (Class<?> type) { return type.equals(  Short.class) || type.equals( short.class); }
+    static boolean isByte    (Class<?> type) { return type.equals(   Byte.class) || type.equals(  byte.class); }
     
-    static boolean areMatchingTypes(Class type_a, Class type_b) {
+    static boolean areMatchingTypes(Class<?> type_a, Class<?> type_b) {
         return isDouble (type_a) && isDouble (type_b) || 
                isFloat  (type_a) && isFloat  (type_b) || 
                isLong   (type_a) && isLong   (type_b) || 
                isInteger(type_a) && isInteger(type_b) || 
                isShort  (type_a) && isShort  (type_b) || 
                isByte   (type_a) && isByte   (type_b);
+    }
+
+    // helper function for getWiderType
+    private static int getTypeScore(Class<?> type) {
+        if      (isDouble (type)) return 6;
+        else if (isFloat  (type)) return 5;
+        else if (isLong   (type)) return 4;
+        else if (isInteger(type)) return 3;
+        else if (isShort  (type)) return 2;
+        else if (isByte   (type)) return 1;
+        assert(false); // invalid type
+        return 0;
+    }
+
+    static Class<?> getWiderType(Class<?> type_a, Class<?> type_b) {
+        return getTypeScore(type_a) > getTypeScore(type_b) ? type_a : type_b;
+    }
+
+    static Number coerceNumber(Class<?> to_type, Number from_value) {
+        if (isDouble(to_type)) {
+            return from_value.doubleValue();
+        }
+        else if (isFloat(to_type)) {
+            return from_value.floatValue();
+        }
+        else if (isLong(to_type)) {
+            return from_value.longValue();
+        }
+        else if (isInteger(to_type)) {
+            return from_value.intValue();
+        }
+        else if (isShort(to_type)) {
+            return from_value.shortValue();
+        }
+        else if (isByte(to_type)) {
+            return from_value.byteValue();
+        }
+        assert(false); // invalid argument to_type
+        return null;
     }
 }

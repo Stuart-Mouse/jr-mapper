@@ -5,6 +5,7 @@
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class NodeObject extends NodeScope {
     NodeObject(Parser owningParser, NodeScope parent, Token token) {
@@ -21,13 +22,20 @@ public class NodeObject extends NodeScope {
         for (var field_node: declarations) {
             // NOTE: all field nodes in an object will necessarily match the declaration type of the parent object
             //       input declarations cannot have a valueNode, so all fields here must either be a variable or output declaration
-            try {
-                field_node.resolvedField = valueType.getDeclaredField(field_node.name);
-                field_node.typecheck(field_node.resolvedField.getType());
-                // TODO: not yet sure if we need to check the result of the above typechecking call.
-            } catch (NoSuchFieldException e) {
+            Class<?> clazz = valueType;
+            while (clazz != null && field_node.resolvedField == null) {
+                try {
+                    field_node.resolvedField = clazz.getDeclaredField(field_node.name);
+                } catch (NoSuchFieldException e) {
+//                    throw new RuntimeException(field_node.location() + ": Error: no such field '" + field_node.name + "' on object of type " + valueType + ".");
+                }
+                clazz = clazz.getSuperclass();
+            }
+            if (field_node.resolvedField == null) {
                 throw new RuntimeException(field_node.location() + ": Error: no such field '" + field_node.name + "' on object of type " + valueType + ".");
             }
+            field_node.typecheck(field_node.resolvedField.getType());
+            // TODO: not yet sure if we need to check the result of the above typechecking call.
         }
         return valueType;
     }
