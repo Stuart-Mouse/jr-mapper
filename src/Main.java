@@ -43,6 +43,8 @@ public class Main {
             System.out.println("sample2.getString(): " + sample2.getString());
 //            System.out.println("sample2.getAlternateString(): " + sample2.getAlternateString());
 
+            System.out.println("b: " + parser.getOutput("b"));
+
         } catch(Exception e) {
             System.out.println("Exception: " + e.toString());
             e.printStackTrace();

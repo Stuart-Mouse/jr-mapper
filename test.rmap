@@ -12,3 +12,5 @@ output sample2: SampleDerived(5.5) = {
 var num: `java.lang.Double`("5.0") = 7.7,
 
 var filename := "test." + sample2.text,
+
+output b := sample1.fraction > sample2.fraction,

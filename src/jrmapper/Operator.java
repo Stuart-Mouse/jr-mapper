@@ -16,10 +16,10 @@ public enum Operator {
     MUL                       (Type.BINARY, 6, "*", Token.STAR),
     DIV                       (Type.BINARY, 6, "/", Token.SLASH);
 
-    public Type    type;
-    public int     precedence;
-    public int     tokenType;
-    public String  printName;
+    public final Type    type;
+    public final int     precedence;
+    public final int     tokenType;
+    public final String  printName;
 
     public enum Type { UNARY, BINARY, ASSIGNMENT, };
     private Operator(Type type, int precedence, String printName, int tokenType) {
@@ -29,9 +29,10 @@ public enum Operator {
         this.tokenType  = tokenType;
     };
 
+    static final Operator[] cachedValues = values();
+    
     public static Operator fromToken(Token token, boolean expect_unary) {
-        var values = Operator.values(); // TODO: cache somewhere
-        for (var v: values) {
+        for (var v: cachedValues) {
             if (v.tokenType == token.type() && ((v.type == Type.UNARY) == expect_unary)) {
                 return v;
             }

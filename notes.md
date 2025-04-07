@@ -311,10 +311,13 @@ we can probably remove the need for hint_value if we change how output objects w
 Roadmap:
     
     Constructors
+        basically working, will fix things as needed
     Choice expressions
     Interfaces
     Testing
         test with nontrivial object types, various complex expressions
+        make sure fully-qualified class names work
+            need to figure out how just resolve identifiers as packages so that we don't need the backticked quotes parsing hack
     Integration
         clean up parser interface
         make interface type for custom member binding
