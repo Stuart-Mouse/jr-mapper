@@ -59,6 +59,8 @@ public class NodeMethodCall extends Node {
                 );
             }
 
+            System.out.println("contructors: " + constructors);
+
             if (constructors.size() > 1) {
                 // now for manual filtering, we want to check that all parameters for which we already have resolved types are valid
                 var it_method = constructors.iterator();
@@ -78,7 +80,7 @@ public class NodeMethodCall extends Node {
             }
 
             if (constructors.isEmpty()) {
-                throw new RuntimeException(location() + ": Error: unable to resolve method '" + identifier.name + "' for class " + hint_type + ".");
+                throw new RuntimeException(location() + ": Error: unable to resolve contructor for '" + identifier.name + "'.");
             }
 
             assert(constructors.size() == 1);

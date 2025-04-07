@@ -71,7 +71,7 @@ public class Lexer {
 
     private static boolean isAlpha(char c) {
         return (c >= 'a' && c <= 'z')
-                || (c >= 'A' && c <= 'Z');
+            || (c >= 'A' && c <= 'Z');
     };
 
     private static boolean beginsIdentifier(char c) {
@@ -217,7 +217,7 @@ public class Lexer {
             }
             c = advance(1);
 
-            var token_type = (c == '`') ? Token.IDENTIFIER : Token.STRING;
+            var token_type = (quote_char == '`') ? Token.IDENTIFIER : Token.STRING;
             return new Token(token_type, line, column, sourceText.substring(start, end));
         }
 

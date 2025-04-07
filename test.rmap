@@ -1,12 +1,14 @@
 output sample1: SampleDerived() = {
     text     := "Testing file: " + filename,
     number   := sample2.number + 1,
-    fraction := 3 + sample2.fraction,
+    fraction := 3 + num,
 }
 
 output sample2: SampleDerived(5.5) = {
     text     := "rmap",
     number   := 3535,
 }
+
+var num: `java.lang.Double`("5.0") = 7.7,
 
 var filename := "test." + sample2.text,
