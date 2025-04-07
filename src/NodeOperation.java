@@ -56,6 +56,7 @@ public class NodeOperation extends Node {
             switch (operator) {
                 case ADD: return lv.toString() + rv.toString();
             }
+            throw new RuntimeException(location() + ": Error: invalid string operator: " + operator.printName);
         }
 
         if (lv instanceof Number ln && rv instanceof Number rn) {
@@ -75,11 +76,12 @@ public class NodeOperation extends Node {
                     case DIV -> { result = Long.valueOf( ln.longValue() / rn.longValue() ); }
                 }
             }
-            assert(result != null);
+            if (result == null) {
+                throw new RuntimeException(location() + ": Error: failed to execute operation " + operator.printName + " on number types " + left.valueType + ", " + right.valueType);
+            }
             return NodeNumber.coerceNumber(valueType, result);
         }
 
-        assert(false);
-        return null;
+        throw new RuntimeException(location() + ": Error: tried to execute unknown operation " + operator.printName + " with types " + left.valueType + ", " + right.valueType);
     }
 }
