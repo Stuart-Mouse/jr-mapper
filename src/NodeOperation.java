@@ -18,11 +18,12 @@ public class NodeOperation extends Node {
         Class<?>  left_type =  left.typecheck(hint_type);
         Class<?> right_type = right.typecheck(hint_type);
 
-        // NOTE: if either left or right type is string, we treat both as a string
+        // If either left or right type is string, we treat both as a string
         if (left_type.equals(String.class) || right_type.equals(String.class)) {
             return String.class;
         }
 
+        // For numbers, we have some additional logic to coerce to the hint_type or wider type.
         if (NodeNumber.isNumericType(left_type) && NodeNumber.isNumericType(right_type)) {
             if (NodeNumber.areMatchingTypes(left_type, right_type)) {
                 if (hint_type != null && NodeNumber.isNumericType(hint_type)) {
@@ -33,13 +34,11 @@ public class NodeOperation extends Node {
             }
         }
 
-        if (!left_type.equals(right_type)) {
-            // TODO: if left and right types don't match, we can try to coerce to the wider of the two types.
-            throw new RuntimeException(location() + ": Error: left and right types of operation do not match: " + left_type + " vs " + right_type + ".");
+        if (left_type.equals(right_type)) {
+            return left_type;
         }
 
-        // TODO: verify that we can always assume that an operation will have the same type as its operands.
-        return left_type;
+        throw new RuntimeException(location() + ": Error: left and right types of operation do not match: " + left_type + " vs " + right_type + ".");
     }
 
     void _serialize(StringBuilder sb) {
