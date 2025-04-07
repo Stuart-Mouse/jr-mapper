@@ -12,6 +12,21 @@ public class NodeObject extends NodeScope {
         super(owningParser, parent, token);
     }
 
+    // Returns null if no such field was found, so that caller can throw with source location information.
+    public static Field resolveObjectField(Class<?> type, String field_name) {
+        if (type != null) {
+            try {
+                return type.getDeclaredField(field_name);
+            } catch (NoSuchFieldException e) { }
+
+            for (var anInterface: type.getInterfaces()) {
+                return resolveObjectField(anInterface, field_name);
+            }
+            return resolveObjectField(type.getSuperclass(), field_name);
+        }
+        return null;
+    }
+
     Class _typecheck(Class hint_type) {
         if (hint_type == null) {
             throw new RuntimeException(location() + ": Error: no hint type provided to NodeObject.typecheck().");
@@ -20,17 +35,7 @@ public class NodeObject extends NodeScope {
         valueType = hint_type;
 
         for (var field_node: declarations) {
-            // NOTE: all field nodes in an object will necessarily match the declaration type of the parent object
-            //       input declarations cannot have a valueNode, so all fields here must either be a variable or output declaration
-            Class<?> clazz = valueType;
-            while (clazz != null && field_node.resolvedField == null) {
-                try {
-                    field_node.resolvedField = clazz.getDeclaredField(field_node.name);
-                } catch (NoSuchFieldException e) {
-//                    throw new RuntimeException(field_node.location() + ": Error: no such field '" + field_node.name + "' on object of type " + valueType + ".");
-                }
-                clazz = clazz.getSuperclass();
-            }
+            field_node.resolvedField = resolveObjectField(valueType, field_node.name);
             if (field_node.resolvedField == null) {
                 throw new RuntimeException(field_node.location() + ": Error: no such field '" + field_node.name + "' on object of type " + valueType + ".");
             }

@@ -19,16 +19,7 @@ public class NodeDot extends Node {
 
         if (right instanceof NodeIdentifier identifier) {
             // We manually typecheck right side identifier in this case. Perks of not making everythign private.
-            Class<?> clazz = left_type;
-            while (clazz != null && identifier.resolvedField == null) {
-                System.out.println("Checking object " + clazz + " for field " + identifier.name + "...");
-                try {
-                    identifier.resolvedField = clazz.getDeclaredField(identifier.name);
-                } catch (NoSuchFieldException e) {
-                    System.out.println("Unable to resolved field " + identifier.name + " on object of type " + clazz + ".");
-                }
-                clazz = clazz.getSuperclass();
-            }
+            identifier.resolvedField = NodeObject.resolveObjectField(left_type, identifier.name);
             if (identifier.resolvedField == null) {
                 throw new RuntimeException(identifier.location() + ": Error: no such field '" + identifier.name + "' on object of type " + left_type + ".");
             }
